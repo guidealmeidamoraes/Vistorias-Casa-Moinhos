@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Vistoria de Apartamentos · Melnick — Casa Moinhos</title>
+<style>
+:root {
+  --navy: #0E2A47;
+  --navy2: #163A5F;
+  --gold: #B5862E;
+  --gold-soft: #F5EDD8;
+  --bg: #F0F2F5;
+  --card: #FFFFFF;
+  --line: #DDE2E8;
+  --ink: #16202B;
+  --muted: #6B7A8A;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(14,42,71,.10), 0 1px 2px rgba(14,42,71,.06);
+  --shadow-lg: 0 8px 32px rgba(14,42,71,.16);
+
+  /* Especialidades — novas cores */
+  --eletrica: #2563EB;
+  --eletrica-bg: #EFF6FF;
+  --hidraulica: #16A34A;
+  --hidraulica-bg: #F0FDF4;
+  --esquadrias: #92400E;
+  --esquadrias-bg: #FEF3C7;
+  --pedreiro: #EAB308;
+  --pedreiro-bg: #FEFCE8;
+  --outros: #7C3AED;
+  --outros-bg: #F5F3FF;
+
+  --pend: #F59E0B;
+  --ok: #16A34A;
+  --nc: #EF4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* TOPBAR */
+.topbar {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  color: #fff; padding: 0 16px; height: 58px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; box-shadow: 0 2px 12px rgba(14,42,71,.25); z-index: 50;
+}
+.topbar .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.topbar .logo-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.topbar .logo-box {
+  width: 36px; height: 36px; border-radius: 8px; background: var(--gold);
+  display: grid; place-items: center; flex-shrink: 0; overflow: hidden;
+}
+.topbar .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+.topbar .logo-box .logo-letter { font-weight: 800; font-size: 20px; color: var(--navy); }
+.topbar .logo-obra { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.15); display: grid; place-items: center; flex-shrink: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.2); }
+.topbar .logo-obra img { width: 100%; height: 100%; object-fit: contain; }
+.topbar .logo-obra .obra-letter { font-size: 11px; font-weight: 800; color: #fff; text-align: center; line-height: 1.2; }
+.topbar-titles { min-width: 0; }
+.topbar-titles h1 { font-size: 14px; font-weight: 700; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-titles .sub { font-size: 10.5px; opacity: .7; font-weight: 500; }
+.topbar-right { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+/* NAV */
+.nav { display: flex; background: var(--navy); border-top: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
+.nav-btn {
+  flex: 1; padding: 9px 6px; background: none; border: none;
+  color: rgba(255,255,255,.5); font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border-bottom: 2px solid transparent; transition: .15s; letter-spacing: .2px;
+}
+.nav-btn .ic { font-size: 17px; line-height: 1; }
+.nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.nav-btn:hover:not(.active) { color: rgba(255,255,255,.85); }
+
+/* SCREENS */
+.screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── TELA 1: UNIDADES ── */
+#screen-units { background: var(--bg); }
+.units-header { padding: 14px 18px 12px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.units-header h2 { font-size: 15px; font-weight: 700; flex: 1; }
+.units-scroll { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.units-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 11px; }
+
+.unit-card {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius);
+  padding: 13px 15px; cursor: pointer; box-shadow: var(--shadow); transition: .15s; position: relative; overflow: hidden;
+}
+.unit-card:hover { border-color: var(--navy); box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+.unit-card.active-inspect { border-color: var(--gold); background: var(--gold-soft); }
+.unit-card .unit-num { font-size: 21px; font-weight: 800; color: var(--navy); letter-spacing: -1px; }
+.unit-card .unit-tipo { font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 1px; text-transform: uppercase; letter-spacing: .4px; }
+.unit-card .unit-floor { font-size: 11px; color: var(--muted); margin-top: 5px; }
+.unit-card .unit-stats { display: flex; gap: 5px; margin-top: 9px; flex-wrap: wrap; }
+.unit-pill { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 20px; }
+.unit-card .unit-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; display: flex; }
+.unit-bar-seg { flex: 0 0 auto; height: 100%; }
+
+.add-unit-card {
+  border: 1.5px dashed var(--line); border-radius: var(--radius);
+  padding: 13px 15px; cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 5px; color: var(--muted);
+  font-size: 12.5px; font-weight: 600; min-height: 96px; transition: .15s;
+}
+.add-unit-card:hover { border-color: var(--navy); color: var(--navy); background: var(--card); }
+.add-unit-card .ic { font-size: 22px; }
+
+/* ── TELA 2: PLANTA ── */
+#screen-plant { background: #111827; position: relative; }
+.plant-topbar {
+  background: rgba(14,42,71,.97); padding: 9px 14px;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,.1); flex-wrap: wrap;
+}
+.plant-unit-sel {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  color: #fff; padding: 6px 11px; border-radius: 8px; font-size: 13px;
+  font-weight: 700; font-family: inherit; cursor: pointer; min-width: 130px;
+}
+.plant-unit-sel option { background: #1a2e44; color: #fff; }
+.plant-mode-btns { display: flex; gap: 3px; }
+.mode-btn {
+  padding: 6px 11px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.65); font-size: 12px;
+  font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s;
+}
+.mode-btn.active { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
+.plant-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.plant-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: rgba(255,255,255,.35); text-align: center; padding: 40px; }
+.plant-placeholder .ic { font-size: 44px; }
+.plant-placeholder p { font-size: 13.5px; line-height: 1.6; }
+
+.zoom-container { width: 100%; height: 100%; overflow: auto; display: flex; align-items: flex-start; justify-content: flex-start; position: relative; }
+.plant-canvas-wrap { position: relative; display: inline-block; user-select: none; transform-origin: top left; }
+.plant-canvas-wrap.mode-add { cursor: crosshair; }
+.plant-canvas-wrap.mode-view { cursor: grab; }
+.plant-canvas-wrap.mode-view:active { cursor: grabbing; }
+#plantImg { display: block; pointer-events: none; }
+
+/* PINS */
+.pin {
+  position: absolute;
+  width: 26px; height: 26px;
+  border-radius: 50% 50% 50% 0;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  border: 2px solid rgba(255,255,255,.85);
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  transition: transform .15s, box-shadow .15s;
+  z-index: 10; cursor: pointer;
+  touch-action: none;
+}
+.pin:hover { box-shadow: 0 4px 14px rgba(0,0,0,.55); }
+.pin.dragging { transform: translate(-50%, -100%) rotate(-45deg) scale(1.25); box-shadow: 0 6px 20px rgba(0,0,0,.5); z-index: 30; cursor: grabbing; }
+.pin .pin-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transform: rotate(45deg); font-size: 9px; font-weight: 800; color: #fff; pointer-events: none; }
+.pin.resolved { opacity: .4; }
+
+/* LEGEND */
+.plant-legend {
+  position: absolute; bottom: 10px; left: 10px;
+  background: rgba(14,42,71,.9); backdrop-filter: blur(8px);
+  border-radius: 10px; padding: 8px 12px;
+  display: flex; gap: 10px; flex-wrap: wrap; z-index: 20;
+}
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.85); }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* CONTROLS */
+.plant-controls { position: absolute; bottom: 10px; right: 10px; display: flex; flex-direction: column; gap: 5px; z-index: 20; }
+.ctrl-btn {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: rgba(14,42,71,.9); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.15); color: #fff; font-size: 17px;
+  cursor: pointer; display: grid; place-items: center; transition: .12s;
+}
+.ctrl-btn:hover { background: var(--navy); }
+
+/* ── TELA 3: ITENS ── */
+#screen-items { background: var(--bg); }
+.items-header { padding: 12px 18px; background: var(--card); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.items-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.items-header-row h2 { font-size: 15px; font-weight: 700; flex: 1; }
+.items-filters { display: flex; gap: 5px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 5px 11px; border-radius: 20px; border: 1.5px solid var(--line);
+  background: #fff; color: var(--muted); font-size: 11.5px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: .12s;
+}
+.filter-chip.active { color: #fff; border-color: transparent; }
+.items-scroll { flex: 1; overflow-y: auto; padding: 13px 18px; }
+
+.item-card {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius);
+  margin-bottom: 9px; overflow: hidden; box-shadow: var(--shadow); border-left: 4px solid var(--line);
+}
+.item-card.resolved { opacity: .6; }
+.item-head { display: flex; align-items: flex-start; gap: 9px; padding: 11px 13px; cursor: pointer; }
+.item-esp-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.item-body-text { flex: 1; min-width: 0; }
+.item-title { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+.item-meta { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-top: 3px; }
+.item-esp-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 20px; }
+.item-resolve-btn {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--line); background: none; cursor: pointer;
+  display: grid; place-items: center; font-size: 13px; transition: .12s;
+}
+.item-resolve-btn:hover { border-color: var(--ok); background: var(--ok); color: #fff; }
+.item-resolve-btn.done { border-color: var(--ok); background: var(--ok); color: #fff; }
+.item-expand { display: none; padding: 0 13px 11px; border-top: 1px solid var(--line); background: var(--bg); }
+.item-expand.open { display: block; padding-top: 10px; }
+.item-photo { width: 90px; height: 90px; object-fit: cover; border-radius: 7px; border: 1px solid var(--line); cursor: pointer; }
+
+/* ── TELA 4: RELATÓRIO ── */
+#screen-report { background: var(--bg); }
+.report-header { padding: 12px 18px; background: var(--card); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.report-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; align-items: center; }
+.report-scroll { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.rfilter-label { font-size: 11.5px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.rsel { padding: 5px 9px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 12px; font-weight: 700; font-family: inherit; }
+
+/* MODAIS */
+.overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(14,42,71,.55); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 14px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--card); border-radius: 16px; box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto;
+  transform: translateY(14px); transition: transform .2s;
+}
+.overlay.show .modal { transform: translateY(0); }
+.modal-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 9px; }
+.modal-head h3 { font-size: 15px; font-weight: 700; flex: 1; }
+.modal-close { background: none; border: none; font-size: 19px; cursor: pointer; color: var(--muted); padding: 2px; line-height: 1; }
+.modal-body { padding: 16px 18px; }
+
+/* FORM */
+.field { margin-bottom: 13px; }
+.field label { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin-bottom: 5px; }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 9px;
+  font-size: 13.5px; font-family: inherit; color: var(--ink); background: #fff;
+  outline: none; transition: border-color .12s;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(14,42,71,.1); }
+.field textarea { min-height: 68px; resize: vertical; line-height: 1.5; }
+
+/* ESP SELECTOR */
+.esp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.esp-btn {
+  padding: 9px 7px; border-radius: 9px; border: 2px solid var(--line); background: #fff;
+  cursor: pointer; font-size: 11.5px; font-weight: 700; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: .12s; color: var(--muted); text-align: center;
+}
+.esp-btn .esp-ic { font-size: 17px; }
+.esp-btn.sel { color: #fff; border-color: transparent; }
+
+/* FOTOS */
+.foto-area { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 2px; }
+.foto-thumb { position: relative; width: 76px; height: 76px; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); flex-shrink: 0; }
+.foto-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.foto-thumb .del { position: absolute; top: 2px; right: 2px; width: 17px; height: 17px; border-radius: 50%; background: rgba(0,0,0,.72); color: #fff; border: none; font-size: 11px; cursor: pointer; display: grid; place-items: center; }
+.add-foto-btn { width: 76px; height: 76px; border-radius: 7px; border: 1.5px dashed var(--line); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--muted); font-size: 10.5px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+.add-foto-btn .ic { font-size: 20px; }
+.add-foto-btn input { display: none; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 9px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .12s; white-space: nowrap; }
+.btn:hover { border-color: var(--navy); }
+.btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+.btn.primary:hover { background: var(--navy2); }
+.btn.gold { background: var(--gold); color: #fff; border-color: var(--gold); }
+.btn.danger { color: #EF4444; border-color: #FECACA; }
+.btn.danger:hover { background: #FEF2F2; }
+.btn.sm { padding: 6px 12px; font-size: 12px; }
+.btn.xs { padding: 4px 9px; font-size: 11px; border-radius: 7px; }
+.btn-row { display: flex; gap: 7px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 44px 20px; color: var(--muted); }
+.empty-state .ic { font-size: 38px; margin-bottom: 9px; }
+.empty-state h3 { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.empty-state p { font-size: 13px; line-height: 1.6; }
+
+/* TOAST */
+#toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--navy); color: #fff; padding: 9px 17px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: .22s; z-index: 999; white-space: nowrap; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* PHOTO FULLSCREEN */
+.photo-fs { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.92); display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+.photo-fs img { max-width: 95%; max-height: 95%; border-radius: 8px; }
+.photo-fs-close { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 22px; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; }
+
+/* LOGO UPLOAD OVERLAY */
+.logo-upload-area { display: flex; gap: 16px; flex-wrap: wrap; }
+.logo-slot { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.logo-slot label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+.logo-preview { width: 72px; height: 72px; border-radius: 10px; border: 1.5px dashed var(--line); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font-size: 10px; font-weight: 700; cursor: pointer; overflow: hidden; }
+.logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(14,42,71,.18); border-radius: 3px; }
+
+@media print { body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; } #printArea { position: absolute; inset: 0; } @page { margin: 12mm; } }
+
+/* AMBIENTE CHIPS */
+.amb-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.amb-chip {
+  padding: 5px 10px; border-radius: 20px; border: 1.5px solid var(--line);
+  background: #fff; color: var(--muted); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: .12s; white-space: nowrap;
+  user-select: none;
+}
+.amb-chip:hover { border-color: var(--navy); color: var(--navy); }
+.amb-chip.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
+.amb-input-wrap { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.amb-input-wrap input { flex: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-wrap">
+        <div class="logo-box" id="logo-melnick-box" onclick="openLogoModal()" title="Clique para adicionar logo">
+          <span class="logo-letter" id="logo-melnick-letter">M</span>
+        </div>
+        <div class="logo-obra" id="logo-obra-box" onclick="openLogoModal()" title="Clique para adicionar logo da obra">
+          <span class="obra-letter" id="logo-obra-letter">CM</span>
+        </div>
+      </div>
+      <div class="topbar-titles">
+        <div class="sub" style="color:var(--gold);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px" id="topbar-obra-name">Melnick · Casa Moinhos</div>
+        <h1>Vistoria de Apartamentos</h1>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="sync-status" style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);white-space:nowrap"></span>
+      <button class="btn sm" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff" onclick="cloudLoad().then(()=>{applyConfig();renderAll();toast('Dados atualizados da nuvem!')})" title="Forçar sincronização">🔄 Sincronizar</button>
+      <button class="btn sm" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff" onclick="openLogoModal()" title="Configurar logos e nome da obra">⚙ Obra</button>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" data-screen="units" onclick="goScreen('units')"><span class="ic">🏢</span>UNIDADES</button>
+    <button class="nav-btn" data-screen="plant" onclick="goScreen('plant')"><span class="ic">📐</span>PLANTA</button>
+    <button class="nav-btn" data-screen="items" onclick="goScreen('items')"><span class="ic">📋</span>ITENS</button>
+    <button class="nav-btn" data-screen="report" onclick="goScreen('report')"><span class="ic">📄</span>RELATÓRIO</button>
+  </nav>
+
+  <!-- TELA 1: UNIDADES -->
+  <section class="screen active" id="screen-units">
+    <div class="units-header">
+      <h2>Unidades</h2>
+      <span id="units-count" style="font-size:11.5px;color:var(--muted);font-weight:600"></span>
+      <button class="btn sm primary" onclick="openUnitModal()">＋ Nova unidade</button>
+    </div>
+    <div class="units-scroll"><div class="units-grid" id="units-grid"></div></div>
+  </section>
+
+  <!-- TELA 2: PLANTA -->
+  <section class="screen" id="screen-plant">
+    <div class="plant-topbar">
+      <select class="plant-unit-sel" id="plant-unit-sel" onchange="selectPlantUnit(this.value)">
+        <option value="">— Selecionar unidade —</option>
+      </select>
+      <div class="plant-mode-btns">
+        <button class="mode-btn active" id="mode-add" onclick="setMode('add')">＋ Adicionar</button>
+        <button class="mode-btn" id="mode-view" onclick="setMode('view')">👁 Navegar</button>
+      </div>
+      <button class="btn xs" onclick="openUploadPlant()" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff">📎 Carregar planta</button>
+      <input type="file" id="plantUpload" accept="image/*" style="display:none" onchange="handlePlantUpload(event)">
+      <button class="btn xs" onclick="printPlant()" id="btn-print-plant" style="display:none;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff">🖨 Imprimir planta</button>
+      <span id="plant-tip" style="font-size:10.5px;color:rgba(255,255,255,.45);margin-left:2px"></span>
+    </div>
+    <div class="plant-area" id="plant-area">
+      <div class="plant-placeholder" id="plant-placeholder">
+        <div class="ic">📐</div>
+        <p id="plant-placeholder-msg">Selecione uma unidade e carregue a planta baixa para começar a mapear os itens.</p>
+      </div>
+      <div class="zoom-container" id="zoom-container" style="display:none">
+        <div class="plant-canvas-wrap mode-add" id="plant-wrap">
+          <img id="plantImg" src="" alt="Planta baixa" draggable="false">
+          <div id="pins-layer"></div>
+        </div>
+      </div>
+      <div class="plant-legend" id="plant-legend" style="display:none">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--eletrica)"></div>Elétrica</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--hidraulica)"></div>Hidráulica</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--esquadrias)"></div>Esquadrias</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--pedreiro)"></div>Pedreiro</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--outros)"></div>Outros</div>
+      </div>
+      <div class="plant-controls" id="plant-controls" style="display:none">
+        <button class="ctrl-btn" onclick="zoom(1.25)" title="Zoom +">＋</button>
+        <button class="ctrl-btn" onclick="zoom(0.8)" title="Zoom −">−</button>
+        <button class="ctrl-btn" onclick="resetZoom()" title="Ajustar tela">⊙</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELA 3: ITENS -->
+  <section class="screen" id="screen-items">
+    <div class="items-header">
+      <div class="items-header-row">
+        <h2>Todos os Itens</h2>
+        <span id="items-count" style="font-size:11.5px;color:var(--muted);font-weight:600"></span>
+      </div>
+      <div class="items-filters" id="items-filters">
+        <button class="filter-chip active" data-filter="all" onclick="setItemFilter('all',this)" style="background:var(--navy);color:#fff;border-color:var(--navy)">Todos</button>
+        <button class="filter-chip" data-filter="pendente" onclick="setItemFilter('pendente',this)">⏳ Pendentes</button>
+        <button class="filter-chip" data-filter="resolvido" onclick="setItemFilter('resolvido',this)">✅ Resolvidos</button>
+        <button class="filter-chip" data-filter="eletrica" onclick="setItemFilter('eletrica',this)">Elétrica</button>
+        <button class="filter-chip" data-filter="hidraulica" onclick="setItemFilter('hidraulica',this)">Hidráulica</button>
+        <button class="filter-chip" data-filter="esquadrias" onclick="setItemFilter('esquadrias',this)">Esquadrias</button>
+        <button class="filter-chip" data-filter="pedreiro" onclick="setItemFilter('pedreiro',this)">Pedreiro</button>
+        <button class="filter-chip" data-filter="outros" onclick="setItemFilter('outros',this)">Outros</button>
+      </div>
+    </div>
+    <div class="items-scroll" id="items-scroll"></div>
+  </section>
+
+  <!-- TELA 4: RELATÓRIO -->
+  <section class="screen" id="screen-report">
+    <div class="report-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <h2 style="font-size:15px;font-weight:700;flex:1">Gerar Relatório</h2>
+        <button class="btn primary sm" onclick="buildAndPrint()">🖨 Imprimir / PDF</button>
+      </div>
+      <div class="report-filters">
+        <span class="rfilter-label">Especialidade:</span>
+        <button class="filter-chip active" data-rf="all" onclick="setReportFilter('all',this)" style="background:var(--navy);color:#fff;border-color:var(--navy)">Todas</button>
+        <button class="filter-chip" data-rf="eletrica" onclick="setReportFilter('eletrica',this)">Elétrica</button>
+        <button class="filter-chip" data-rf="hidraulica" onclick="setReportFilter('hidraulica',this)">Hidráulica</button>
+        <button class="filter-chip" data-rf="esquadrias" onclick="setReportFilter('esquadrias',this)">Esquadrias</button>
+        <button class="filter-chip" data-rf="pedreiro" onclick="setReportFilter('pedreiro',this)">Pedreiro</button>
+        <button class="filter-chip" data-rf="outros" onclick="setReportFilter('outros',this)">Outros</button>
+        <span class="rfilter-label" style="margin-left:6px">Unidade:</span>
+        <select id="report-unit-filter" class="rsel" onchange="renderReport()"><option value="all">Todas</option></select>
+        <span class="rfilter-label" style="margin-left:4px">Status:</span>
+        <select id="report-status-filter" class="rsel" onchange="renderReport()">
+          <option value="all">Todos</option>
+          <option value="pendente">Pendentes</option>
+          <option value="resolvido">Resolvidos</option>
+        </select>
+      </div>
+    </div>
+    <div class="report-scroll" id="report-scroll"></div>
+  </section>
+</div>
+
+<!-- MODAL: NOVA UNIDADE -->
+<div class="overlay" id="modal-unit">
+  <div class="modal">
+    <div class="modal-head"><h3 id="unit-modal-title">Nova Unidade</h3><button class="modal-close" onclick="closeModal('modal-unit')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Número / Identificação</label><input type="text" id="u-num" placeholder="Ex.: 101, Apto 1201, Cobertura A"></div>
+      <div class="field"><label>Pavimento / Andar</label><input type="text" id="u-floor" placeholder="Ex.: 1º, 12º, Cobertura"></div>
+      <div class="field"><label>Tipologia</label><input type="text" id="u-tipo" placeholder="Ex.: Tipo A, 3 dorms, Garden"></div>
+      <div class="field"><label>Observação (opcional)</label><input type="text" id="u-obs" placeholder="Ex.: Entrega prevista 15/08"></div>
+      <div class="btn-row">
+        <button class="btn danger" id="btn-del-unit" onclick="deleteUnit()" style="display:none;margin-right:auto">🗑 Excluir unidade</button>
+        <button class="btn" onclick="closeModal('modal-unit')">Cancelar</button>
+        <button class="btn primary" onclick="saveUnit()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO / EDITAR ITEM -->
+<div class="overlay" id="modal-item">
+  <div class="modal">
+    <div class="modal-head"><h3 id="item-modal-title">Novo Item</h3><button class="modal-close" onclick="closeModal('modal-item')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Especialidade responsável</label><div class="esp-grid" id="esp-grid"></div></div>
+      <div class="field">
+        <label>Ambiente / Local</label>
+        <div class="amb-chips" id="amb-chips"></div>
+        <div class="amb-input-wrap">
+          <input type="text" id="i-local" placeholder="Outro ambiente…" oninput="onLocalInput()">
+        </div>
+      </div>
+      <div class="field"><label>O que deve ser feito</label><textarea id="i-desc" placeholder="Descreva para o executor: o que, onde, como. Ex.: Retocar massa corrida no rodapé da suíte, junto ao batente da porta, trecho ~30 cm."></textarea></div>
+      <div class="field"><label>Por quê / impacto (opcional)</label><input type="text" id="i-motivo" placeholder="Ex.: Visível ao cliente, estética comprometida"></div>
+      <div class="field">
+        <label>Fotos</label>
+        <div class="foto-area" id="foto-area">
+          <label class="add-foto-btn"><span class="ic">📷</span>Foto<input type="file" accept="image/*" capture="environment" multiple onchange="handleFotos(event)"></label>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn danger" id="btn-del-item" onclick="deleteCurrentItem()" style="display:none;margin-right:auto">🗑 Excluir</button>
+        <button class="btn" onclick="closeModal('modal-item')">Cancelar</button>
+        <button class="btn primary" onclick="saveItem()">Salvar item</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIGURAR OBRA -->
+<div class="overlay" id="modal-obra">
+  <div class="modal">
+    <div class="modal-head"><h3>Configurar Obra</h3><button class="modal-close" onclick="closeModal('modal-obra')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nome da Obra / Empreendimento</label><input type="text" id="obra-name" placeholder="Ex.: Casa Moinhos, Seen Menino Deus"></div>
+      <div class="field"><label>Construtora / Incorporadora</label><input type="text" id="obra-empresa" placeholder="Ex.: Melnick"></div>
+      <div class="field">
+        <label>Logos</label>
+        <div class="logo-upload-area">
+          <div class="logo-slot">
+            <label>Logo Melnick</label>
+            <label class="logo-preview" id="logo-melnick-preview" onclick="document.getElementById('logo-melnick-file').click()">
+              <span id="logo-melnick-preview-content">＋ Logo</span>
+            </label>
+            <input type="file" id="logo-melnick-file" accept="image/*" style="display:none" onchange="handleLogoUpload(event,'melnick')">
+            <button class="btn xs danger" onclick="removeLogo('melnick')" id="btn-remove-melnick" style="display:none">Remover</button>
+          </div>
+          <div class="logo-slot">
+            <label>Logo da Obra</label>
+            <label class="logo-preview" id="logo-obra-preview" onclick="document.getElementById('logo-obra-file').click()">
+              <span id="logo-obra-preview-content">＋ Logo</span>
+            </label>
+            <input type="file" id="logo-obra-file" accept="image/*" style="display:none" onchange="handleLogoUpload(event,'obra')">
+            <button class="btn xs danger" onclick="removeLogo('obra')" id="btn-remove-obra" style="display:none">Remover</button>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px">Os logos aparecem no cabeçalho e no relatório impresso.</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="closeModal('modal-obra')">Cancelar</button>
+        <button class="btn primary" onclick="saveObraConfig()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+const LS = "melnick_vistoria_v2";
+const JSONBIN_ID  = "6a36d32af5f4af5e29153f94";
+const JSONBIN_KEY = "$2a$10$6rg/8nFsArTG03WKa8qiiupFU3vfUEYf70WNJgeGos5XQ.6Jh.S4S";
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+let syncTimer = null;
+let syncStatus = "idle"; // idle | saving | error
+
+
+const AMBIENTES = [
+  "Sala","Gourmet","Sacada","Lavabo","Hall Social",
+  "Cozinha","Lavanderia","Dormitório Serviço","Banho Serviço",
+  "Circulação de Serviço","Suíte Master","Banho Master",
+  "Suíte 2","Banho 2","Suíte 3","Banho 3","Suíte 4","Banho 4"
+];
+
+function renderAmbChips(selectedVal) {
+  const container = document.getElementById("amb-chips");
+  if(!container) return;
+  container.innerHTML = AMBIENTES.map(a =>
+    `<button type="button" class="amb-chip ${selectedVal===a?"sel":""}" onclick="selectAmb('${a}')">${a}</button>`
+  ).join("");
+}
+
+function selectAmb(amb) {
+  document.getElementById("i-local").value = amb;
+  renderAmbChips(amb);
+}
+
+function onLocalInput() {
+  const val = document.getElementById("i-local").value;
+  renderAmbChips(val);
+}
+
+const ESPS = {
+  eletrica:   { label:"Elétrica",   ic:"⚡", color:"#2563EB", bg:"#EFF6FF" },
+  hidraulica: { label:"Hidráulica", ic:"💧", color:"#16A34A", bg:"#F0FDF4" },
+  esquadrias: { label:"Esquadrias", ic:"🪟", color:"#92400E", bg:"#FEF9C3" },
+  pedreiro:   { label:"Pedreiro",   ic:"🧱", color:"#CA8A04", bg:"#FEFCE8" },
+  outros:     { label:"Outros",     ic:"🔧", color:"#7C3AED", bg:"#F5F3FF" },
+};
+
+let state = load() || { units:[], items:[], config:{ obraName:"Casa Moinhos", empresa:"Melnick", logoMelnick:null, logoObra:null } };
+if(!state.config) state.config = { obraName:"Casa Moinhos", empresa:"Melnick", logoMelnick:null, logoObra:null };
+
+let currentPlantUnit = state._lastUnit || null;
+let plantScale = 1;
+let plantMode = "add";
+let editingUnitId = null;
+let editingItemId = null;
+let pendingPinPos = null;
+let currentFotos = [];
+let currentEsp = "pedreiro";
+let itemFilter = "all";
+let reportFilter = "all";
+let toastTimer;
+
+// Pin drag state
+let draggingPin = null;
+let pinDragging = false;
+let dragStartX = 0, dragStartY = 0;
+let dragOrigX = 0, dragOrigY = 0;
+let dragMoved = false;
+
+function uid() { return "x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// ── SYNC JSONBIN ──
+function setSyncStatus(s, msg) {
+  syncStatus = s;
+  const el = document.getElementById("sync-status");
+  if(!el) return;
+  const icons = { idle:"☁️", saving:"⏳", saved:"✅", error:"⚠️" };
+  el.textContent = (icons[s]||"") + " " + (msg||"");
+  el.style.color = s==="error" ? "#EF4444" : s==="saved" ? "#16A34A" : "rgba(255,255,255,.6)";
+}
+
+async function cloudSave() {
+  state._lastUnit = currentPlantUnit;
+  // Sempre salva local também
+  try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){}
+  // Debounce: espera 1.5s sem novas edições antes de subir
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    setSyncStatus("saving", "Salvando…");
+    try {
+      const res = await fetch(JSONBIN_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_KEY,
+          "X-Bin-Versioning": "false"
+        },
+        body: JSON.stringify(state)
+      });
+      if(!res.ok) throw new Error(res.status);
+      setSyncStatus("saved", "Salvo na nuvem");
+      setTimeout(()=>setSyncStatus("idle",""), 3000);
+    } catch(err) {
+      console.warn("JSONBin save error:", err);
+      setSyncStatus("error", "Erro ao salvar — dados salvos localmente");
+    }
+  }, 1500);
+}
+
+async function cloudLoad() {
+  setSyncStatus("saving", "Carregando…");
+  try {
+    const res = await fetch(JSONBIN_URL + "/latest", {
+      headers: { "X-Master-Key": JSONBIN_KEY }
+    });
+    if(!res.ok) throw new Error(res.status);
+    const json = await res.json();
+    const data = json.record;
+    if(data && data.units && data.items) {
+      state = data;
+      if(!state.config) state.config = { obraName:"Casa Moinhos", empresa:"Melnick", logoMelnick:null, logoObra:null };
+      try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){}
+      setSyncStatus("saved", "Sincronizado");
+      setTimeout(()=>setSyncStatus("idle",""), 3000);
+      return true;
+    }
+  } catch(err) {
+    console.warn("JSONBin load error:", err);
+    setSyncStatus("error", "Offline — usando dados locais");
+    setTimeout(()=>setSyncStatus("idle",""), 4000);
+  }
+  return false;
+}
+
+function save() { cloudSave(); }
+function load() { try { const r=localStorage.getItem(LS); return r?JSON.parse(r):null; } catch(e){return null;} }
+function esc(s) { return (s||"").replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function today() { return new Date().toLocaleDateString("pt-BR"); }
+function fmtDate(iso) { if(!iso) return "—"; try { return new Date(iso).toLocaleDateString("pt-BR"); } catch(e){return iso;} }
+
+function toast(msg) {
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+// ── CONFIG OBRA ──
+function applyConfig() {
+  const c = state.config;
+  document.getElementById("topbar-obra-name").textContent = (c.empresa||"Melnick") + " · " + (c.obraName||"");
+  document.title = "Vistoria · " + (c.obraName||"Melnick");
+
+  // Logo Melnick
+  const mBox = document.getElementById("logo-melnick-box");
+  if(c.logoMelnick) {
+    mBox.innerHTML = `<img src="${c.logoMelnick}" alt="Logo">`;
+  } else {
+    mBox.innerHTML = `<span class="logo-letter">M</span>`;
+  }
+  // Logo obra
+  const oBox = document.getElementById("logo-obra-box");
+  if(c.logoObra) {
+    oBox.innerHTML = `<img src="${c.logoObra}" alt="Logo obra">`;
+  } else {
+    const initials = (c.obraName||"CM").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    oBox.innerHTML = `<span class="obra-letter">${initials}</span>`;
+  }
+}
+
+function openLogoModal() {
+  const c = state.config;
+  document.getElementById("obra-name").value = c.obraName||"";
+  document.getElementById("obra-empresa").value = c.empresa||"";
+  // previews
+  updateLogoPreview("melnick", c.logoMelnick);
+  updateLogoPreview("obra", c.logoObra);
+  openModal("modal-obra");
+}
+
+function updateLogoPreview(which, src) {
+  const preview = document.getElementById(`logo-${which}-preview`);
+  const content = document.getElementById(`logo-${which}-preview-content`);
+  const btn = document.getElementById(`btn-remove-${which}`);
+  if(src) {
+    preview.style.padding = "0";
+    content.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:contain">`;
+    btn.style.display = "inline-flex";
+  } else {
+    preview.style.padding = "";
+    content.textContent = "＋ Logo";
+    btn.style.display = "none";
+  }
+}
+
+function handleLogoUpload(e, which) {
+  const file = e.target.files[0]; e.target.value="";
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const max=400; let w=img.width, h=img.height;
+      if(w>max||h>max){const rr=Math.min(max/w,max/h);w=Math.round(w*rr);h=Math.round(h*rr);}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      const data = c.toDataURL("image/png");
+      if(which==="melnick") state.config.logoMelnick=data;
+      else state.config.logoObra=data;
+      updateLogoPreview(which, data);
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+function removeLogo(which) {
+  if(which==="melnick") state.config.logoMelnick=null;
+  else state.config.logoObra=null;
+  updateLogoPreview(which, null);
+}
+
+function saveObraConfig() {
+  state.config.obraName = document.getElementById("obra-name").value.trim();
+  state.config.empresa = document.getElementById("obra-empresa").value.trim();
+  save(); applyConfig(); closeModal("modal-obra"); toast("Configurações salvas!");
+}
+
+// ── NAV ──
+function goScreen(id) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+  document.querySelector(`.nav-btn[data-screen="${id}"]`).classList.add("active");
+  if(id==="units") renderUnits();
+  if(id==="plant") { syncPlantSelect(); renderPins(); }
+  if(id==="items") renderItems();
+  if(id==="report") { syncReportFilters(); renderReport(); }
+}
+
+function openModal(id) { document.getElementById(id).classList.add("show"); }
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+
+// ── TELA 1: UNIDADES ──
+function renderUnits() {
+  const grid = document.getElementById("units-grid");
+  const total=state.items.length;
+  const pend=state.items.filter(i=>i.status==="pendente").length;
+  document.getElementById("units-count").textContent = `${state.units.length} unidade${state.units.length!==1?"s":""} · ${total} item${total!==1?"s":""} · ${pend} pendente${pend!==1?"s":""}`;
+
+  if(state.units.length===0) {
+    grid.innerHTML=`<div class="add-unit-card" onclick="openUnitModal()"><span class="ic">＋</span><span>Cadastrar primeira unidade</span></div>`;
+    return;
+  }
+
+  grid.innerHTML = state.units.map(u=>{
+    const uItems=state.items.filter(i=>i.unitId===u.id);
+    const pend=uItems.filter(i=>i.status==="pendente").length;
+    const res=uItems.filter(i=>i.status==="resolvido").length;
+    const espCounts={};
+    uItems.filter(i=>i.status==="pendente").forEach(i=>{espCounts[i.esp]=(espCounts[i.esp]||0)+1;});
+    const pills=Object.entries(espCounts).map(([esp,n])=>
+      `<span class="unit-pill" style="background:${ESPS[esp].bg};color:${ESPS[esp].color}">${ESPS[esp].ic}${n}</span>`).join("");
+    const total=uItems.length||1;
+    const barSegs=Object.entries(espCounts).map(([esp,n])=>
+      `<div class="unit-bar-seg" style="flex:${n};background:${ESPS[esp].color}"></div>`).join("");
+    const isActive=currentPlantUnit===u.id;
+    return `<div class="unit-card ${isActive?"active-inspect":""}" onclick="openUnitOnPlant('${u.id}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div><div class="unit-num">${esc(u.num)}</div><div class="unit-tipo">${esc(u.tipo||"")}</div></div>
+        <button class="btn xs" onclick="event.stopPropagation();editUnit('${u.id}')" style="color:var(--muted)" title="Editar">✎</button>
+      </div>
+      ${u.floor?`<div class="unit-floor">${esc(u.floor)}</div>`:""}
+      <div class="unit-stats">
+        ${pend?`<span class="unit-pill" style="background:#FEF3C7;color:#B45309">⏳${pend}</span>`:""}
+        ${res?`<span class="unit-pill" style="background:#D1FAE5;color:#15803D">✅${res}</span>`:""}
+        ${!uItems.length?`<span class="unit-pill" style="background:#F1F5F9;color:#94A3B8">Sem itens</span>`:""}
+        ${pills}
+      </div>
+      <div class="unit-bar">${barSegs}</div>
+    </div>`;
+  }).join("") + `<div class="add-unit-card" onclick="openUnitModal()"><span class="ic">＋</span><span>Nova unidade</span></div>`;
+}
+
+function openUnitOnPlant(id) {
+  currentPlantUnit=id; save(); goScreen("plant");
+  syncPlantSelect(); loadPlantForUnit(id);
+}
+
+function openUnitModal(id) {
+  editingUnitId=id||null;
+  const u=id?state.units.find(x=>x.id===id):null;
+  document.getElementById("unit-modal-title").textContent=u?"Editar Unidade":"Nova Unidade";
+  document.getElementById("u-num").value=u?u.num:"";
+  document.getElementById("u-floor").value=u?(u.floor||""):"";
+  document.getElementById("u-tipo").value=u?(u.tipo||""):"";
+  document.getElementById("u-obs").value=u?(u.obs||""):"";
+  document.getElementById("btn-del-unit").style.display=u?"inline-flex":"none";
+  openModal("modal-unit");
+  setTimeout(()=>document.getElementById("u-num").focus(),120);
+}
+function editUnit(id){openUnitModal(id);}
+
+function saveUnit() {
+  const num=document.getElementById("u-num").value.trim();
+  if(!num){toast("Informe o número da unidade");return;}
+  if(editingUnitId) {
+    const u=state.units.find(x=>x.id===editingUnitId);
+    if(u){u.num=num;u.floor=document.getElementById("u-floor").value.trim();u.tipo=document.getElementById("u-tipo").value.trim();u.obs=document.getElementById("u-obs").value.trim();}
+  } else {
+    state.units.push({id:uid(),num,floor:document.getElementById("u-floor").value.trim(),tipo:document.getElementById("u-tipo").value.trim(),obs:document.getElementById("u-obs").value.trim(),plant:null});
+  }
+  save();closeModal("modal-unit");renderUnits();toast(editingUnitId?"Unidade atualizada":"Unidade cadastrada");
+}
+
+function deleteUnit() {
+  if(!editingUnitId) return;
+  const u=state.units.find(x=>x.id===editingUnitId);
+  if(!confirm(`Excluir a unidade "${u?u.num:""}" e todos os seus itens?`)) return;
+  state.items=state.items.filter(i=>i.unitId!==editingUnitId);
+  state.units=state.units.filter(x=>x.id!==editingUnitId);
+  if(currentPlantUnit===editingUnitId) currentPlantUnit=null;
+  save();closeModal("modal-unit");renderUnits();toast("Unidade excluída");
+}
+
+// ── TELA 2: PLANTA ──
+function syncPlantSelect() {
+  const sel=document.getElementById("plant-unit-sel");
+  sel.innerHTML='<option value="">— Selecionar unidade —</option>'+
+    state.units.map(u=>`<option value="${u.id}" ${currentPlantUnit===u.id?"selected":""}>${esc(u.num)}${u.floor?" · "+esc(u.floor):""}</option>`).join("");
+}
+
+function selectPlantUnit(id) {
+  currentPlantUnit=id||null; save(); loadPlantForUnit(id);
+}
+
+function loadPlantForUnit(id) {
+  if(!id){showPlantPlaceholder();return;}
+  const u=state.units.find(x=>x.id===id);
+  if(!u||!u.plant){
+    showPlantPlaceholder("Unidade selecionada. Clique em '📎 Carregar planta' para adicionar a imagem da planta baixa.");
+    document.getElementById("btn-print-plant").style.display="none";
+    return;
+  }
+  showPlantImage(u.plant);
+}
+
+function showPlantPlaceholder(msg) {
+  document.getElementById("plant-placeholder").style.display="flex";
+  document.getElementById("zoom-container").style.display="none";
+  document.getElementById("plant-legend").style.display="none";
+  document.getElementById("plant-controls").style.display="none";
+  document.getElementById("btn-print-plant").style.display="none";
+  if(msg) document.getElementById("plant-placeholder-msg").textContent=msg;
+}
+
+function showPlantImage(src) {
+  document.getElementById("plant-placeholder").style.display="none";
+  document.getElementById("zoom-container").style.display="flex";
+  document.getElementById("plant-legend").style.display="flex";
+  document.getElementById("plant-controls").style.display="flex";
+  document.getElementById("btn-print-plant").style.display="inline-flex";
+  const img=document.getElementById("plantImg");
+  img.src=src;
+}
+
+function openUploadPlant() {
+  if(!currentPlantUnit){toast("Selecione uma unidade primeiro");return;}
+  document.getElementById("plantUpload").click();
+}
+
+function handlePlantUpload(e) {
+  const file=e.target.files[0]; e.target.value="";
+  if(!file) return;
+  if(file.type==="application/pdf"){
+    toast("Para PDF: converta para PNG/JPG primeiro (ex: ilovepdf.com → PDF para JPG).");return;
+  }
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const u=state.units.find(x=>x.id===currentPlantUnit); if(!u) return;
+    const img=new Image();
+    img.onload=()=>{
+      const max=2800; let w=img.width,h=img.height;
+      if(w>max||h>max){const r=Math.min(max/w,max/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      u.plant=c.toDataURL("image/jpeg",0.9);
+      save();showPlantImage(u.plant);toast("Planta carregada!");
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ZOOM
+function zoom(factor) {
+  plantScale=Math.min(Math.max(plantScale*factor,0.3),8);
+  applyZoom();
+}
+function resetZoom() {
+  const img=document.getElementById("plantImg");
+  const area=document.getElementById("plant-area");
+  if(!img.naturalWidth) return;
+  const aW=area.clientWidth-20, aH=area.clientHeight-20;
+  plantScale=Math.min(aW/img.naturalWidth, aH/img.naturalHeight, 1);
+  applyZoom();
+  const zc=document.getElementById("zoom-container");
+  zc.scrollTop=0; zc.scrollLeft=0;
+}
+function applyZoom() {
+  const img=document.getElementById("plantImg");
+  const wrap=document.getElementById("plant-wrap");
+  if(!img.naturalWidth) return;
+  const w=Math.round(img.naturalWidth*plantScale);
+  const h=Math.round(img.naturalHeight*plantScale);
+  img.style.width=w+"px";
+  img.style.height=h+"px";
+  wrap.style.width=w+"px";
+  wrap.style.height=h+"px";
+  renderPins();
+}
+
+// MODE
+function setMode(m) {
+  plantMode=m;
+  document.getElementById("mode-add").classList.toggle("active",m==="add");
+  document.getElementById("mode-view").classList.toggle("active",m==="view");
+  const wrap=document.getElementById("plant-wrap");
+  if(wrap){wrap.classList.toggle("mode-add",m==="add");wrap.classList.toggle("mode-view",m==="view");}
+  document.getElementById("plant-tip").textContent = m==="add"?"Toque na planta para adicionar item":"Arraste para navegar · Segure um PIN para mover";
+}
+
+// CLICK NA PLANTA
+document.getElementById("plant-area").addEventListener("click", function(e) {
+  if(plantMode!=="add") return;
+  if(dragMoved) { dragMoved=false; return; }
+  const wrap=document.getElementById("plant-wrap");
+  if(!wrap||document.getElementById("zoom-container").style.display==="none") return;
+  if(!currentPlantUnit){toast("Selecione uma unidade");return;}
+  const u=state.units.find(x=>x.id===currentPlantUnit);
+  if(!u||!u.plant){toast("Carregue a planta primeiro");return;}
+  if(e.target.closest(".pin")) return;
+
+  const rect=wrap.getBoundingClientRect();
+  const img=document.getElementById("plantImg");
+  const x=(e.clientX-rect.left)/plantScale/img.naturalWidth*100;
+  const y=(e.clientY-rect.top)/plantScale/img.naturalHeight*100;
+  if(x<0||x>100||y<0||y>100) return;
+
+  pendingPinPos={x,y};
+  openItemModal(null);
+});
+
+// ── RENDERIZAR PINS ──
+function renderPins() {
+  const layer=document.getElementById("pins-layer");
+  if(!layer) return;
+  layer.innerHTML="";
+  if(!currentPlantUnit) return;
+  const img=document.getElementById("plantImg");
+  if(!img.naturalWidth||!img.style.width) return;
+
+  const items=state.items.filter(i=>i.unitId===currentPlantUnit);
+  let num=0;
+  items.forEach(item=>{
+    if(item.pinX===null||item.pinX===undefined) return;
+    num++;
+    const pin=document.createElement("div");
+    pin.className="pin"+(item.status==="resolvido"?" resolved":"");
+    pin.style.background=ESPS[item.esp]?.color||"#999";
+    pin.innerHTML=`<div class="pin-num">${num}</div>`;
+    pin.title=(item.desc||item.esp||"")+(item.local?" · "+item.local:"");
+    pin.dataset.id=item.id;
+
+    const px=item.pinX/100*img.naturalWidth*plantScale;
+    const py=item.pinY/100*img.naturalHeight*plantScale;
+    pin.style.left=px+"px";
+    pin.style.top=py+"px";
+
+    // ── DRAG PIN ──
+    let longPressTimer=null;
+
+    const startDrag = (clientX, clientY) => {
+      pinDragging=true; dragMoved=false;
+      draggingPin=item;
+      dragStartX=clientX; dragStartY=clientY;
+      dragOrigX=item.pinX; dragOrigY=item.pinY;
+      pin.classList.add("dragging");
+    };
+
+    // Touch: segura 400ms para arrastar
+    pin.addEventListener("touchstart", e=>{
+      const t=e.touches[0];
+      longPressTimer=setTimeout(()=>{
+        startDrag(t.clientX,t.clientY);
+        e.preventDefault();
+      },400);
+    },{passive:true});
+
+    pin.addEventListener("touchmove", e=>{
+      if(!pinDragging){clearTimeout(longPressTimer);return;}
+      e.preventDefault();
+      const t=e.touches[0];
+      moveDraggingPin(t.clientX,t.clientY,img);
+    },{passive:false});
+
+    pin.addEventListener("touchend", e=>{
+      clearTimeout(longPressTimer);
+      if(pinDragging){finishDrag();return;}
+      // tap: abrir modal
+      if(!dragMoved) { e.preventDefault(); openItemModal(item.id); }
+    });
+
+    // Mouse: clique abre, mousedown+move arrasta
+    pin.addEventListener("mousedown", e=>{
+      if(e.button!==0) return;
+      e.stopPropagation();
+      longPressTimer=setTimeout(()=>{startDrag(e.clientX,e.clientY);},200);
+      const onMove=ev=>{
+        if(!pinDragging && Math.hypot(ev.clientX-e.clientX,ev.clientY-e.clientY)>4){
+          clearTimeout(longPressTimer);
+          startDrag(e.clientX,e.clientY);
+        }
+        if(pinDragging) moveDraggingPin(ev.clientX,ev.clientY,img);
+      };
+      const onUp=()=>{
+        clearTimeout(longPressTimer);
+        document.removeEventListener("mousemove",onMove);
+        document.removeEventListener("mouseup",onUp);
+        if(pinDragging){finishDrag();}
+        else if(!dragMoved){openItemModal(item.id);}
+      };
+      document.addEventListener("mousemove",onMove);
+      document.addEventListener("mouseup",onUp);
+    });
+
+    layer.appendChild(pin);
+  });
+}
+
+function moveDraggingPin(clientX,clientY,img) {
+  if(!draggingPin) return;
+  dragMoved=true;
+  const wrap=document.getElementById("plant-wrap");
+  const rect=wrap.getBoundingClientRect();
+  const x=Math.max(0,Math.min(100,(clientX-rect.left)/plantScale/img.naturalWidth*100));
+  const y=Math.max(0,Math.min(100,(clientY-rect.top)/plantScale/img.naturalHeight*100));
+  draggingPin.pinX=x; draggingPin.pinY=y;
+
+  // Mover o pin no DOM diretamente para fluidez
+  const pin=document.querySelector(`.pin[data-id="${draggingPin.id}"]`);
+  if(pin){
+    pin.style.left=(x/100*img.naturalWidth*plantScale)+"px";
+    pin.style.top=(y/100*img.naturalHeight*plantScale)+"px";
+  }
+}
+
+function finishDrag() {
+  if(draggingPin){ save(); }
+  const pin=document.querySelector(`.pin.dragging`);
+  if(pin) pin.classList.remove("dragging");
+  draggingPin=null; pinDragging=false;
+  setTimeout(()=>{dragMoved=false;},80);
+}
+
+// ── IMPRIMIR PLANTA ──
+function printPlant() {
+  if(!currentPlantUnit){toast("Selecione uma unidade");return;}
+  const u=state.units.find(x=>x.id===currentPlantUnit);
+  if(!u||!u.plant){toast("Nenhuma planta carregada");return;}
+  const img=document.getElementById("plantImg");
+  const items=state.items.filter(i=>i.unitId===currentPlantUnit&&i.pinX!==null&&i.pinX!==undefined);
+  const c=state.config;
+
+  // Desenhar planta com pins no canvas
+  const canvas=document.createElement("canvas");
+  const scale=2; // alta res para impressão
+  canvas.width=img.naturalWidth*scale;
+  canvas.height=img.naturalHeight*scale;
+  const ctx=canvas.getContext("2d");
+  ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+  let num=0;
+  items.forEach(item=>{
+    num++;
+    const px=item.pinX/100*canvas.width;
+    const py=item.pinY/100*canvas.height;
+    const r=18*scale;
+    const col=ESPS[item.esp]?.color||"#999";
+
+    // Sombra
+    ctx.save();
+    ctx.shadowColor="rgba(0,0,0,.35)";
+    ctx.shadowBlur=8*scale;
+    ctx.shadowOffsetY=3*scale;
+
+    // Pin (losango → triângulo apontando pra baixo + círculo em cima)
+    ctx.fillStyle=col;
+    ctx.strokeStyle="rgba(255,255,255,.9)";
+    ctx.lineWidth=2.5*scale;
+    ctx.beginPath();
+    ctx.arc(px, py-r, r, 0, Math.PI*2);
+    ctx.fill(); ctx.stroke();
+    // Cauda
+    ctx.beginPath();
+    ctx.moveTo(px-r*0.55, py-r*0.4);
+    ctx.lineTo(px+r*0.55, py-r*0.4);
+    ctx.lineTo(px, py+r*0.2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Número
+    ctx.fillStyle="#fff";
+    ctx.font=`bold ${13*scale}px Arial`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(String(num), px, py-r);
+  });
+
+  const plantDataUrl=canvas.toDataURL("image/jpeg",0.92);
+
+  // Legenda
+  const espUsed=[...new Set(items.map(i=>i.esp))];
+  const legendHtml=espUsed.map(esp=>{
+    const e=ESPS[esp];
+    return `<div style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;font-size:11px;font-weight:700">
+      <div style="width:12px;height:12px;border-radius:50%;background:${e.color};flex-shrink:0"></div>${e.label}
+    </div>`;
+  }).join("");
+
+  // Tabela de itens
+  const tableRows = items.map((item,idx)=>{
+    const e=ESPS[item.esp]||ESPS.outros;
+    return `<tr>
+      <td style="padding:5px 8px;border:1px solid #dde2e8;text-align:center;font-weight:800;font-size:12px;white-space:nowrap">
+        <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${e.color};color:#fff;font-size:10px;font-weight:800;line-height:18px;text-align:center">${idx+1}</span>
+      </td>
+      <td style="padding:5px 8px;border:1px solid #dde2e8;font-size:11.5px;font-weight:800;color:${e.color}">${e.ic} ${e.label}</td>
+      <td style="padding:5px 8px;border:1px solid #dde2e8;font-size:11.5px">${esc(item.local||"—")}</td>
+      <td style="padding:5px 8px;border:1px solid #dde2e8;font-size:11.5px">${esc(item.desc||"—")}</td>
+      <td style="padding:5px 8px;border:1px solid #dde2e8;text-align:center">
+        <span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:12px;${item.status==="resolvido"?"background:#D1FAE5;color:#15803D":"background:#FEF3C7;color:#B45309"}">${item.status==="resolvido"?"✅ Ok":"⏳ Pend."}</span>
+      </td>
+    </tr>`;
+  }).join("");
+
+  const logoHtml = c.logoMelnick
+    ? `<img src="${c.logoMelnick}" style="height:40px;object-fit:contain">`
+    : `<div style="width:40px;height:40px;background:#0E2A47;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#B5862E;font-weight:800;font-size:20px">M</div>`;
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Planta ${esc(u.num)} · ${esc(c.obraName||"")}</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#16202B;margin:0;padding:0}
+    @page{margin:10mm;size:A4 landscape}
+    @media print{body{margin:0}}
+    table{border-collapse:collapse;width:100%}
+  </style></head><body>
+  <div style="display:flex;align-items:center;gap:12px;border-bottom:3px solid #0E2A47;padding-bottom:10px;margin-bottom:12px">
+    ${logoHtml}
+    <div>
+      <div style="font-size:18px;font-weight:800;color:#0E2A47">PLANTA — ${esc(u.num)}${u.floor?" · "+esc(u.floor):""}${u.tipo?" · "+esc(u.tipo):""}</div>
+      <div style="font-size:11px;color:#6B7A8A;font-weight:600">${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · ${today()}</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-bottom:10px">
+    <img src="${plantDataUrl}" style="max-width:100%;max-height:420px;object-fit:contain;border:1px solid #dde2e8;border-radius:6px">
+  </div>
+  ${legendHtml?`<div style="margin-bottom:10px;padding:6px 10px;background:#F8F9FA;border-radius:6px;border:1px solid #dde2e8">${legendHtml}</div>`:""}
+  ${items.length?`<table><tr>
+    <th style="padding:6px 8px;border:1px solid #0E2A47;background:#0E2A47;color:#fff;font-size:11px;width:36px">Nº</th>
+    <th style="padding:6px 8px;border:1px solid #0E2A47;background:#0E2A47;color:#fff;font-size:11px">Especialidade</th>
+    <th style="padding:6px 8px;border:1px solid #0E2A47;background:#0E2A47;color:#fff;font-size:11px">Local</th>
+    <th style="padding:6px 8px;border:1px solid #0E2A47;background:#0E2A47;color:#fff;font-size:11px">O que fazer</th>
+    <th style="padding:6px 8px;border:1px solid #0E2A47;background:#0E2A47;color:#fff;font-size:11px;width:70px">Status</th>
+  </tr>${tableRows}</table>`:"<p style='color:#6B7A8A;font-size:12px'>Nenhum item mapeado nesta unidade.</p>"}
+  <div style="margin-top:18px;border-top:1px solid #dde2e8;padding-top:8px;font-size:10px;color:#6B7A8A;display:flex;justify-content:space-between">
+    <span>${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · Vistoria de Apartamentos</span><span>${today()}</span>
+  </div>
+  <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
+
+  printViaIframe(html);
+}
+
+// ── MODAL DE ITEM ──
+function buildEspGrid(sel) {
+  return Object.entries(ESPS).map(([key,esp])=>
+    `<button class="esp-btn ${sel===key?"sel":""}" data-esp="${key}"
+      style="${sel===key?"background:"+esp.color+";border-color:"+esp.color:""}"
+      onclick="selectEsp('${key}')">
+      <span class="esp-ic">${esp.ic}</span>${esp.label}
+    </button>`
+  ).join("");
+}
+
+function selectEsp(key) {
+  currentEsp=key;
+  document.getElementById("esp-grid").innerHTML=buildEspGrid(key);
+}
+
+function openItemModal(itemId) {
+  editingItemId=itemId;
+  currentFotos=[];
+  const item=itemId?state.items.find(x=>x.id===itemId):null;
+  document.getElementById("item-modal-title").textContent=item?"Editar Item":"Novo Item";
+  document.getElementById("btn-del-item").style.display=item?"inline-flex":"none";
+  currentEsp=item?item.esp:"pedreiro";
+  document.getElementById("esp-grid").innerHTML=buildEspGrid(currentEsp);
+  const localVal = item?(item.local||''):"";
+  document.getElementById("i-local").value=localVal;
+  renderAmbChips(localVal);
+  document.getElementById("i-desc").value=item?(item.desc||''):"";
+  document.getElementById("i-motivo").value=item?(item.motivo||''):"";
+  currentFotos=item?[...(item.fotos||[])]:[];
+  renderFotoArea();
+  openModal("modal-item");
+  setTimeout(()=>document.getElementById("i-local").focus(),150);
+}
+
+function renderFotoArea() {
+  const area=document.getElementById("foto-area");
+  const thumbs=currentFotos.map((f,i)=>
+    `<div class="foto-thumb"><img src="${f}" alt=""><button class="del" onclick="removeFoto(${i})">×</button></div>`
+  ).join("");
+  area.innerHTML=thumbs+`<label class="add-foto-btn"><span class="ic">📷</span>Foto<input type="file" accept="image/*" capture="environment" multiple onchange="handleFotos(event)"></label>`;
+}
+
+function removeFoto(i){currentFotos.splice(i,1);renderFotoArea();}
+
+function handleFotos(e) {
+  const files=[...e.target.files]; e.target.value="";
+  let pending=files.length;
+  files.forEach(file=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=1600; let{width:w,height:h}=img;
+        if(w>max||h>max){const rr=Math.min(max/w,max/h);w=Math.round(w*rr);h=Math.round(h*rr);}
+        const c=document.createElement("canvas");c.width=w;c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        currentFotos.push(c.toDataURL("image/jpeg",0.82));
+        if(--pending<=0) renderFotoArea();
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function saveItem() {
+  if(editingItemId) {
+    const item=state.items.find(x=>x.id===editingItemId);
+    if(item){
+      item.esp=currentEsp;
+      item.local=document.getElementById("i-local").value.trim();
+      item.desc=document.getElementById("i-desc").value.trim();
+      item.motivo=document.getElementById("i-motivo").value.trim();
+      item.fotos=[...currentFotos];
+      item.updatedAt=new Date().toISOString();
+    }
+    save();closeModal("modal-item");renderPins();renderItems();toast("Item atualizado");
+  } else {
+    if(!currentPlantUnit){toast("Selecione uma unidade");return;}
+    const item={
+      id:uid(), unitId:currentPlantUnit, esp:currentEsp,
+      local:document.getElementById("i-local").value.trim(),
+      desc:document.getElementById("i-desc").value.trim(),
+      motivo:document.getElementById("i-motivo").value.trim(),
+      fotos:[...currentFotos],
+      pinX:pendingPinPos?pendingPinPos.x:null,
+      pinY:pendingPinPos?pendingPinPos.y:null,
+      status:"pendente", createdAt:new Date().toISOString(),
+    };
+    state.items.push(item);
+    save();closeModal("modal-item");renderPins();renderUnits();toast("Item adicionado!");
+    pendingPinPos=null;
+  }
+}
+
+function deleteCurrentItem() {
+  if(!editingItemId) return;
+  if(!confirm("Excluir este item?")) return;
+  state.items=state.items.filter(x=>x.id!==editingItemId);
+  save();closeModal("modal-item");renderPins();renderItems();toast("Item excluído");
+}
+
+// ── TELA 3: ITENS ──
+function setItemFilter(f,btn) {
+  itemFilter=f;
+  document.querySelectorAll("#items-filters .filter-chip").forEach(c=>{
+    c.classList.remove("active");
+    c.style.background=""; c.style.color=""; c.style.borderColor="";
+  });
+  btn.classList.add("active");
+  btn.style.background=ESPS[f]?ESPS[f].color:"var(--navy)";
+  btn.style.color="#fff"; btn.style.borderColor="transparent";
+  renderItems();
+}
+
+function renderItems() {
+  const scroll=document.getElementById("items-scroll");
+  let items=state.items;
+  if(itemFilter!=="all"){
+    if(itemFilter==="pendente"||itemFilter==="resolvido") items=items.filter(i=>i.status===itemFilter);
+    else items=items.filter(i=>i.esp===itemFilter);
+  }
+  document.getElementById("items-count").textContent=`${items.length} item${items.length!==1?"s":""}`;
+  if(items.length===0){
+    scroll.innerHTML=`<div class="empty-state"><div class="ic">📋</div><h3>Nenhum item</h3><p>Na tela de Planta, selecione uma unidade e toque para adicionar itens.</p></div>`;
+    return;
+  }
+  const byUnit={};
+  items.forEach(item=>{
+    if(!byUnit[item.unitId]) byUnit[item.unitId]=[];
+    byUnit[item.unitId].push(item);
+  });
+  scroll.innerHTML=Object.entries(byUnit).map(([uid,unitItems])=>{
+    const u=state.units.find(x=>x.id===uid);
+    const uLabel=u?`Unidade ${u.num}${u.floor?" · "+u.floor:""}`:("Unidade desconhecida");
+    const pendN=unitItems.filter(i=>i.status==="pendente").length;
+    const cards=unitItems.map((item,idx)=>{
+      const esp=ESPS[item.esp]||ESPS.outros;
+      const hasPhotos=item.fotos&&item.fotos.length>0;
+      return `<div class="item-card ${item.status==="resolvido"?"resolved":""}" style="border-left-color:${esp.color}">
+        <div class="item-head">
+          <div class="item-esp-dot" style="background:${esp.color}"></div>
+          <div class="item-body-text">
+            <div class="item-title">${esc(item.desc)||`Item de ${esp.label}`}</div>
+            <div class="item-meta">
+              ${item.local?`<span style="font-size:11px;color:var(--muted)">📍${esc(item.local)}</span>`:""}
+              <span class="item-esp-badge" style="background:${esp.bg};color:${esp.color}">${esp.ic} ${esp.label}</span>
+              ${hasPhotos?`<span style="font-size:11px;color:var(--muted)">📷${item.fotos.length}</span>`:""}
+              ${item.status==="resolvido"?`<span style="font-size:11px;color:var(--ok);font-weight:700">✅</span>`:""}
+            </div>
+          </div>
+          <button class="item-resolve-btn ${item.status==="resolvido"?"done":""}" onclick="toggleResolve('${item.id}')" title="${item.status==="resolvido"?"Reabrir":"Marcar resolvido"}">✓</button>
+        </div>
+        <div class="item-expand" id="expand-${item.id}">
+          ${item.motivo?`<div style="font-size:12px;color:var(--muted);margin-bottom:6px">💡 ${esc(item.motivo)}</div>`:""}
+          <div style="font-size:11.5px;color:var(--muted);margin-bottom:7px">Registrado: ${fmtDate(item.createdAt)}</div>
+          ${hasPhotos?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0">${item.fotos.map(f=>`<img class="item-photo" src="${f}" alt="" onclick="openPhotoFS('${f}')">`).join("")}</div>`:""}
+          <div style="margin-top:6px;display:flex;gap:5px">
+            <button class="btn xs" onclick="editItemDirect('${item.id}')">✎ Editar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+    return `<div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+        <div style="font-size:13.5px;font-weight:800;color:var(--navy)">${esc(uLabel)}</div>
+        ${pendN?`<span style="font-size:10.5px;background:#FEF3C7;color:#B45309;font-weight:800;padding:2px 7px;border-radius:20px">${pendN} pend.</span>`:""}
+      </div>${cards}</div>`;
+  }).join("");
+
+  scroll.querySelectorAll(".item-head").forEach(head=>{
+    head.onclick=function(e){
+      if(e.target.closest(".item-resolve-btn")) return;
+      const card=head.closest(".item-card");
+      const expand=card.querySelector(".item-expand");
+      if(expand) expand.classList.toggle("open");
+    };
+  });
+}
+
+function toggleResolve(id) {
+  const item=state.items.find(x=>x.id===id); if(!item) return;
+  item.status=item.status==="resolvido"?"pendente":"resolvido";
+  item.resolvedAt=item.status==="resolvido"?new Date().toISOString():null;
+  save();renderItems();renderPins();renderUnits();
+  toast(item.status==="resolvido"?"Marcado como resolvido ✅":"Reaberto ⏳");
+}
+
+function editItemDirect(id){openItemModal(id);}
+
+function openPhotoFS(src) {
+  const div=document.createElement("div");
+  div.className="photo-fs";
+  div.innerHTML=`<img src="${src}"><button class="photo-fs-close" onclick="this.parentElement.remove()">✕</button>`;
+  div.onclick=e=>{if(e.target===div||e.target.tagName==="IMG") div.remove();};
+  document.body.appendChild(div);
+}
+
+// ── TELA 4: RELATÓRIO ──
+function syncReportFilters() {
+  const sel=document.getElementById("report-unit-filter");
+  sel.innerHTML='<option value="all">Todas as unidades</option>'+
+    state.units.map(u=>`<option value="${u.id}">${esc(u.num)}${u.floor?" · "+esc(u.floor):""}</option>`).join("");
+}
+
+function setReportFilter(f,btn) {
+  reportFilter=f;
+  document.querySelectorAll("[data-rf]").forEach(c=>{
+    c.classList.remove("active");c.style.background="";c.style.color="";c.style.borderColor="";
+  });
+  btn.classList.add("active");
+  btn.style.background=ESPS[f]?ESPS[f].color:"var(--navy)";
+  btn.style.color="#fff"; btn.style.borderColor="transparent";
+  renderReport();
+}
+
+function renderReport() {
+  const unitF=document.getElementById("report-unit-filter")?.value||"all";
+  const statusF=document.getElementById("report-status-filter")?.value||"all";
+  let items=state.items;
+  if(reportFilter!=="all") items=items.filter(i=>i.esp===reportFilter);
+  if(unitF!=="all") items=items.filter(i=>i.unitId===unitF);
+  if(statusF!=="all") items=items.filter(i=>i.status===statusF);
+  const scroll=document.getElementById("report-scroll");
+  if(items.length===0){scroll.innerHTML=`<div class="empty-state"><div class="ic">📄</div><h3>Nenhum item</h3><p>Ajuste os filtros acima.</p></div>`;return;}
+  const byEsp={};
+  items.forEach(item=>{
+    if(!byEsp[item.esp]) byEsp[item.esp]={};
+    if(!byEsp[item.esp][item.unitId]) byEsp[item.esp][item.unitId]=[];
+    byEsp[item.esp][item.unitId].push(item);
+  });
+  let html="";
+  Object.entries(byEsp).forEach(([esp,byUnit])=>{
+    const espInfo=ESPS[esp]||ESPS.outros;
+    const totalEsp=Object.values(byUnit).flat().length;
+    html+=`<div style="background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)">
+      <div style="padding:11px 15px;background:${espInfo.bg};border-bottom:1.5px solid var(--line);display:flex;align-items:center;gap:8px">
+        <span style="font-size:19px">${espInfo.ic}</span>
+        <span style="font-size:14px;font-weight:800;color:${espInfo.color}">${espInfo.label}</span>
+        <span style="font-size:11.5px;color:var(--muted);font-weight:600;margin-left:auto">${totalEsp} item${totalEsp!==1?"s":""}</span>
+      </div>`;
+    Object.entries(byUnit).forEach(([uid,unitItems])=>{
+      const u=state.units.find(x=>x.id===uid);
+      html+=`<div style="padding:9px 15px;border-bottom:1px solid var(--line)">
+        <div style="font-size:11.5px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">
+          Unidade ${esc(u?u.num:"?")}${u?.floor?" · "+esc(u.floor):""}
+        </div>`;
+      unitItems.forEach((item,idx)=>{
+        const pend=item.status==="pendente";
+        html+=`<div style="border:1px solid var(--line);border-radius:8px;margin-bottom:7px;padding:9px 11px;background:${pend?"#fff":"#F0FDF4"}">
+          <div style="display:flex;align-items:flex-start;gap:7px">
+            <span style="flex-shrink:0;width:19px;height:19px;border-radius:50%;background:${espInfo.color};color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center">${idx+1}</span>
+            <div style="flex:1;min-width:0">
+              ${item.desc?`<div style="font-size:13px;font-weight:600;line-height:1.4">${esc(item.desc)}</div>`:""}
+              ${item.local?`<div style="font-size:11.5px;color:var(--muted);margin-top:2px">📍 ${esc(item.local)}</div>`:""}
+              ${item.motivo?`<div style="font-size:11.5px;color:var(--muted);margin-top:1px">💡 ${esc(item.motivo)}</div>`:""}
+              ${item.fotos?.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${item.fotos.map(f=>`<img src="${f}" style="width:64px;height:64px;object-fit:cover;border-radius:5px;border:1px solid var(--line);cursor:pointer" onclick="openPhotoFS('${f}')">`).join("")}</div>`:""}
+            </div>
+            <span style="font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:20px;flex-shrink:0;${pend?"background:#FEF3C7;color:#B45309":"background:#D1FAE5;color:#15803D"}">${pend?"⏳":"✅"}</span>
+          </div>
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+    html+=`</div>`;
+  });
+  scroll.innerHTML=html;
+}
+
+// ── IMPRIMIR RELATÓRIO ──
+function buildAndPrint() {
+  const unitF=document.getElementById("report-unit-filter")?.value||"all";
+  const statusF=document.getElementById("report-status-filter")?.value||"all";
+  let items=state.items;
+  if(reportFilter!=="all") items=items.filter(i=>i.esp===reportFilter);
+  if(unitF!=="all") items=items.filter(i=>i.unitId===unitF);
+  if(statusF!=="all") items=items.filter(i=>i.status===statusF);
+
+  const c=state.config;
+  const espLabel=reportFilter==="all"?"Todos os responsáveis":(ESPS[reportFilter]?.label||"");
+  const unidadeLabel=unitF==="all"?"Todas as unidades":(()=>{const u=state.units.find(x=>x.id===unitF);return u?`Unidade ${u.num}`:""})();
+
+  const byEsp={};
+  items.forEach(item=>{
+    if(!byEsp[item.esp]) byEsp[item.esp]={};
+    if(!byEsp[item.esp][item.unitId]) byEsp[item.esp][item.unitId]=[];
+    byEsp[item.esp][item.unitId].push(item);
+  });
+
+  const th="background:#0E2A47;color:#fff;font-size:11px;font-weight:bold;padding:7px 9px;border:1px solid #0E2A47;text-align:left";
+  const td="font-size:11.5px;padding:7px 9px;border:1px solid #dde2e8;vertical-align:top";
+  const tdo="font-size:11.5px;padding:7px 9px;border:1px solid #dde2e8;vertical-align:top;background:#F0FDF4";
+
+  let sections="";
+  let isFirst=true;
+  Object.entries(byEsp).forEach(([esp,byUnit])=>{
+    const espInfo=ESPS[esp]||ESPS.outros;
+    if(!isFirst) sections+=`<div style="page-break-before:always;height:1px"></div>`;
+    isFirst=false;
+    sections+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;padding:11px 13px;background:${espInfo.bg};border-radius:8px;border-left:4px solid ${espInfo.color}">
+      <span style="font-size:21px">${espInfo.ic}</span>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:${espInfo.color}">${espInfo.label}</div>
+        <div style="font-size:11px;color:#5C6B7A;font-weight:600">${Object.values(byUnit).flat().length} item(s)</div>
+      </div>
+    </div>`;
+    Object.entries(byUnit).forEach(([uid,unitItems])=>{
+      const u=state.units.find(x=>x.id===uid);
+      const uLabel=u?`Unidade ${u.num}${u.floor?" · "+u.floor:""}${u.tipo?" — "+u.tipo:""}`:"Unidade";
+      sections+=`<p style="font-size:12.5px;font-weight:800;color:#0E2A47;margin:14px 0 7px">${esc(uLabel)}</p>
+      <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;margin-bottom:10px">
+        <tr>
+          <th style="${th};width:34px">Nº</th>
+          <th style="${th}">O que fazer</th>
+          <th style="${th};width:115px">Local / Ambiente</th>
+          <th style="${th};width:88px">Foto</th>
+          <th style="${th};width:76px">Status</th>
+        </tr>`;
+      unitItems.forEach((item,idx)=>{
+        const pend=item.status==="pendente";
+        const fotoCell=item.fotos?.length
+          ?item.fotos.slice(0,2).map(f=>`<img src="${f}" style="width:60px;height:44px;object-fit:cover;border-radius:4px;border:1px solid #dde2e8;margin:1px">`).join("")
+          :'<span style="color:#aaa;font-size:10px">—</span>';
+        sections+=`<tr>
+          <td style="${pend?td:tdo};text-align:center;font-weight:800">${idx+1}</td>
+          <td style="${pend?td:tdo}">
+            <div style="font-weight:600">${esc(item.desc||"—")}</div>
+            ${item.motivo?`<div style="font-size:10px;color:#5C6B7A;margin-top:2px">💡 ${esc(item.motivo)}</div>`:""}
+          </td>
+          <td style="${pend?td:tdo}">${esc(item.local||"—")}</td>
+          <td style="${pend?td:tdo}">${fotoCell}</td>
+          <td style="${pend?td:tdo};text-align:center">
+            <span style="padding:2px 7px;border-radius:20px;font-size:10px;font-weight:800;${pend?"background:#FEF3C7;color:#B45309":"background:#D1FAE5;color:#15803D"}">${pend?"Pendente":"Resolvido"}</span>
+          </td>
+        </tr>`;
+      });
+      sections+=`</table>`;
+    });
+  });
+
+  const logoHtml=c.logoMelnick
+    ?`<img src="${c.logoMelnick}" style="height:42px;object-fit:contain">`
+    :`<div style="width:42px;height:42px;background:#0E2A47;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#B5862E;font-weight:800;font-size:22px">M</div>`;
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Relatório · ${esc(c.obraName||"")}</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#16202B;margin:0;padding:0}
+    @page{margin:13mm}
+    @media print{body{margin:0}}
+  </style></head><body>
+  <div style="border-bottom:3px solid #0E2A47;padding-bottom:10px;margin-bottom:14px;display:flex;align-items:flex-start;gap:13px">
+    ${logoHtml}
+    <div>
+      <div style="font-size:19px;font-weight:800;color:#0E2A47;letter-spacing:.3px">RELATÓRIO DE VISTORIA · ACABAMENTO</div>
+      <div style="font-size:11.5px;color:#6B7A8A;font-weight:600;margin-top:2px">${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · ${today()}</div>
+    </div>
+  </div>
+  <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;margin-bottom:16px">
+    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5;width:130px">Responsável</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${esc(espLabel)}</td></tr>
+    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5">Unidade</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${esc(unidadeLabel)}</td></tr>
+    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5">Total de itens</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${items.length} item(s)</td></tr>
+    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5">Data de emissão</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${today()}</td></tr>
+  </table>
+  ${sections}
+  <div style="margin-top:36px;border-top:1px solid #dde2e8;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#6B7A8A">
+    <span>${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · Vistoria de Apartamentos</span><span>${today()}</span>
+  </div>
+  <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
+
+  printViaIframe(html);
+}
+
+
+// ── IMPRESSÃO: abre nova aba e escreve o HTML diretamente ──
+function printViaIframe(html) {
+  const w = window.open("about:blank", "_blank");
+  if(!w) {
+    toast("⚠ Permita popups neste site para imprimir. (Ícone na barra de endereço)");
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  // Aguarda o conteúdo carregar antes de abrir print
+  w.onload = function(){ w.focus(); w.print(); };
+  // Fallback caso onload não dispare
+  setTimeout(function(){ try { w.focus(); w.print(); } catch(e){} }, 900);
+}
+
+// ── EXPORT / IMPORT / SAVE ──
+function exportData() {
+  // Exportar sem plantas (menores) — opcional manter plantas
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`vistoria_${(state.config.obraName||"melnick").replace(/\s+/g,"_")}_${Date.now()}.json`;
+  a.click();URL.revokeObjectURL(a.href);toast("Dados exportados!");
+}
+
+function importData(e) {
+  const f=e.target.files[0];if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.units||!d.items) throw 0;
+      state=d;
+      if(!state.config) state.config={obraName:"",empresa:"",logoMelnick:null,logoObra:null};
+      save();applyConfig();renderUnits();toast("Dados importados!");
+    }catch(err){alert("Arquivo inválido.");}
+  };
+  r.readAsText(f);e.target.value="";
+}
+
+function saveHTML() {
+  const clone=document.documentElement.cloneNode(true);
+  const old=clone.querySelector("#__snap__");if(old) old.remove();
+  const body=clone.querySelector("body");
+  const scripts=body.querySelectorAll("script");
+  const mainScript=scripts[scripts.length-1];
+  const snap=document.createElement("script");
+  snap.id="__snap__";
+  snap.textContent="window.__SNAP__="+JSON.stringify(state).replace(/<\//g,"<\\/")+";";
+  body.insertBefore(snap,mainScript);
+  const html="<!DOCTYPE html>\n"+clone.outerHTML;
+  const blob=new Blob([html],{type:"text/html"});
+  const a=document.createElement("a");
+  const safe=(state.config.obraName||"vistoria").replace(/\s+/g,"_");
+  a.href=URL.createObjectURL(blob);
+  a.download=`Vistoria_${safe}_${Date.now()}.html`;
+  a.click();URL.revokeObjectURL(a.href);toast("Versão salva! Envie este arquivo para o computador.");
+}
+
+// Imagem da planta carregou
+document.getElementById("plantImg").addEventListener("load",function(){
+  resetZoom();
+  renderPins();
+});
+
+function renderAll() {
+  applyConfig();
+  renderUnits();
+  if(currentPlantUnit) { syncPlantSelect(); loadPlantForUnit(currentPlantUnit); }
+}
+
+// Init: carrega local primeiro (instantâneo), depois tenta nuvem
+applyConfig();
+renderUnits();
+if(currentPlantUnit) { syncPlantSelect(); loadPlantForUnit(currentPlantUnit); }
+
+// Carregar da nuvem em background
+cloudLoad().then(loaded => {
+  if(loaded) {
+    currentPlantUnit = state._lastUnit || null;
+    renderAll();
+  }
+});
+</script>
+</body>
+</html>
