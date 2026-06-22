@@ -314,7 +314,50 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(14,42,71,.18); border-radius: 3px; }
 
-@media print { body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; } #printArea { position: absolute; inset: 0; } @page { margin: 12mm; } }
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+  @page { margin: 12mm; }
+}
+
+/* PRINT OVERLAY */
+#print-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(14,42,71,.6);
+  backdrop-filter: blur(4px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+#print-overlay.show { display: flex; }
+#print-overlay-inner {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.3);
+  width: min(96vw, 860px);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#print-overlay-bar {
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#print-overlay-bar .title { font-size: 14px; font-weight: 700; flex: 1; }
+#print-overlay-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  background: #fff;
+}
 
 /* AMBIENTE CHIPS */
 .amb-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
@@ -350,9 +393,8 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
       </div>
     </div>
     <div class="topbar-right">
-      <span id="sync-status" style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);white-space:nowrap"></span>
-      <button class="btn sm" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff" onclick="cloudLoad().then(()=>{applyConfig();renderAll();toast('Dados atualizados da nuvem!')})" title="Forçar sincronização">🔄 Sincronizar</button>
       <button class="btn sm" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff" onclick="openLogoModal()" title="Configurar logos e nome da obra">⚙ Obra</button>
+      <button class="btn sm" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff" onclick="saveHTML()">💾 Salvar versão</button>
     </div>
   </header>
 
@@ -550,6 +592,16 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   </div>
 </div>
 
+<div id="print-overlay">
+  <div id="print-overlay-inner">
+    <div id="print-overlay-bar">
+      <span class="title" id="print-overlay-title">Pré-visualização</span>
+      <button class="btn sm gold" onclick="doPrint()">🖨 Imprimir / Salvar PDF</button>
+      <button class="btn sm" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.2)" onclick="closePrintOverlay()">✕ Fechar</button>
+    </div>
+    <div id="print-overlay-content"></div>
+  </div>
+</div>
 <div id="printArea"></div>
 <div id="toast"></div>
 
@@ -557,13 +609,6 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 "use strict";
 
 const LS = "melnick_vistoria_v2";
-const GH_TOKEN  = "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";
-const GH_REPO   = "guidealmeidamoraes/Vistorias-Casa-Moinhos";
-const GH_FILE   = "dados.json";
-const GH_API    = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
-let syncTimer = null;
-let syncStatus = "idle";
-let ghFileSha  = null; // SHA necessário para atualizar o arquivo no GitHub
 
 
 const AMBIENTES = [
@@ -623,98 +668,13 @@ let dragMoved = false;
 
 function uid() { return "x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
-// ── SYNC GITHUB ──
-function setSyncStatus(s, msg) {
-  syncStatus = s;
-  const el = document.getElementById("sync-status");
-  if(!el) return;
-  const icons = { idle:"☁️", saving:"⏳", saved:"✅", error:"⚠️" };
-  el.textContent = (icons[s]||"") + " " + (msg||"");
-  el.style.color = s==="error" ? "#EF4444" : s==="saved" ? "#16A34A" : "rgba(255,255,255,.6)";
+function save() {
+  try { state._lastUnit = currentPlantUnit; localStorage.setItem(LS, JSON.stringify(state)); } catch(e){}
+}
+function load() {
+  try { const r=localStorage.getItem(LS); return r?JSON.parse(r):null; } catch(e){return null;}
 }
 
-async function cloudSave() {
-  state._lastUnit = currentPlantUnit;
-  try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){}
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(async () => {
-    setSyncStatus("saving", "Salvando…");
-    try {
-      // Precisamos do SHA atual para poder atualizar — busca se não tiver
-      if(!ghFileSha) {
-        const check = await fetch(GH_API, {
-          headers: { "Authorization": "token " + GH_TOKEN, "Accept": "application/vnd.github.v3+json" }
-        });
-        if(check.ok) {
-          const meta = await check.json();
-          ghFileSha = meta.sha;
-        }
-        // Se 404, arquivo ainda não existe — SHA fica null e criamos abaixo
-      }
-
-      const body = { message: "sync " + new Date().toISOString(),
-                     content: btoa(unescape(encodeURIComponent(JSON.stringify(state)))),
-                     ...(ghFileSha ? { sha: ghFileSha } : {}) };
-
-      const res = await fetch(GH_API, {
-        method: "PUT",
-        headers: {
-          "Authorization": "token " + GH_TOKEN,
-          "Accept": "application/vnd.github.v3+json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-      if(!res.ok) { const e = await res.json(); throw new Error(e.message||res.status); }
-      const result = await res.json();
-      ghFileSha = result.content.sha; // atualiza SHA para o próximo save
-      setSyncStatus("saved", "Salvo na nuvem");
-      setTimeout(()=>setSyncStatus("idle",""), 3000);
-    } catch(err) {
-      console.warn("GitHub save error:", err);
-      setSyncStatus("error", "Erro ao salvar — verifique conexão");
-    }
-  }, 1800);
-}
-
-async function cloudLoad() {
-  setSyncStatus("saving", "Carregando…");
-  try {
-    const res = await fetch(GH_API + "?t=" + Date.now(), {
-      headers: {
-        "Authorization": "token " + GH_TOKEN,
-        "Accept": "application/vnd.github.v3+json"
-      }
-    });
-    if(res.status === 404) {
-      // Arquivo ainda não existe — normal na primeira vez
-      setSyncStatus("idle", "");
-      return false;
-    }
-    if(!res.ok) throw new Error(res.status);
-    const meta = await res.json();
-    ghFileSha = meta.sha;
-    // Conteúdo vem em base64
-    const raw = decodeURIComponent(escape(atob(meta.content.replace(/
-/g,""))));
-    const data = JSON.parse(raw);
-    if(data && data.units && data.items) {
-      state = data;
-      if(!state.config) state.config = { obraName:"Casa Moinhos", empresa:"Melnick", logoMelnick:null, logoObra:null };
-      try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){}
-      setSyncStatus("saved", "Sincronizado");
-      setTimeout(()=>setSyncStatus("idle",""), 3000);
-      return true;
-    }
-  } catch(err) {
-    console.warn("GitHub load error:", err);
-    setSyncStatus("error", "Offline — usando dados locais");
-    setTimeout(()=>setSyncStatus("idle",""), 4000);
-  }
-  return false;
-}
-
-function save() { cloudSave(); }
 function load() { try { const r=localStorage.getItem(LS); return r?JSON.parse(r):null; } catch(e){return null;} }
 function esc(s) { return (s||"").replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 function today() { return new Date().toLocaleDateString("pt-BR"); }
@@ -1058,49 +1018,108 @@ function renderPins() {
     pin.style.left=px+"px";
     pin.style.top=py+"px";
 
-    // ── DRAG PIN ──
+    // ── DRAG / COPY / TAP PIN ──
+    // Lógica de toque longo:
+    //   < 300ms  → tap → abre modal de edição
+    //   300-800ms sem mover → COPIA o pin (feedback vibração)
+    //   300ms+ COM movimento → ARRASTA o pin
     let longPressTimer=null;
+    let copyHintShown=false;
 
     const startDrag = (clientX, clientY) => {
-      pinDragging=true; dragMoved=false;
+      pinDragging=true; dragMoved=false; copyHintShown=false;
       draggingPin=item;
       dragStartX=clientX; dragStartY=clientY;
       dragOrigX=item.pinX; dragOrigY=item.pinY;
       pin.classList.add("dragging");
     };
 
-    // Touch: segura 400ms para arrastar
+    const copyPin = () => {
+      // Duplica o item com novo id, mesma posição + pequeno offset
+      const newItem = {
+        ...JSON.parse(JSON.stringify(item)),
+        id: uid(),
+        pinX: Math.min(99, item.pinX + 3),
+        pinY: Math.min(99, item.pinY + 3),
+        status: "pendente",
+        createdAt: new Date().toISOString(),
+        resolvedAt: null,
+      };
+      state.items.push(newItem);
+      save(); renderPins(); renderUnits();
+      toast("Pin copiado! Toque nele para editar.");
+      // Feedback tátil se disponível
+      if(navigator.vibrate) navigator.vibrate(60);
+    };
+
+    // ── TOUCH ──
     pin.addEventListener("touchstart", e=>{
       const t=e.touches[0];
+      copyHintShown=false;
+      // Após 350ms parado → vai copiar (mostra hint visual no pin)
       longPressTimer=setTimeout(()=>{
-        startDrag(t.clientX,t.clientY);
-        e.preventDefault();
-      },400);
+        if(!pinDragging) {
+          pin.style.transform="translate(-50%,-100%) rotate(-45deg) scale(1.35)";
+          pin.style.boxShadow="0 0 0 4px rgba(255,255,255,.7), 0 4px 16px rgba(0,0,0,.5)";
+          copyHintShown=true;
+        }
+      }, 350);
     },{passive:true});
 
     pin.addEventListener("touchmove", e=>{
-      if(!pinDragging){clearTimeout(longPressTimer);return;}
-      e.preventDefault();
+      if(pinDragging){
+        e.preventDefault();
+        moveDraggingPin(e.touches[0].clientX, e.touches[0].clientY, img);
+        return;
+      }
       const t=e.touches[0];
-      moveDraggingPin(t.clientX,t.clientY,img);
+      const dist=Math.hypot(t.clientX-dragStartX||0, t.clientY-dragStartY||0);
+      if(dist>6){
+        clearTimeout(longPressTimer);
+        pin.style.transform=""; pin.style.boxShadow="";
+        copyHintShown=false;
+        startDrag(t.clientX, t.clientY);
+      }
     },{passive:false});
 
     pin.addEventListener("touchend", e=>{
       clearTimeout(longPressTimer);
-      if(pinDragging){finishDrag();return;}
-      // tap: abrir modal
-      if(!dragMoved) { e.preventDefault(); openItemModal(item.id); }
+      if(pinDragging){ finishDrag(); return; }
+      if(copyHintShown) {
+        // Estava em modo cópia — executa cópia
+        pin.style.transform=""; pin.style.boxShadow="";
+        copyHintShown=false;
+        e.preventDefault();
+        copyPin();
+        return;
+      }
+      pin.style.transform=""; pin.style.boxShadow="";
+      if(!dragMoved){ e.preventDefault(); openItemModal(item.id); }
     });
 
-    // Mouse: clique abre, mousedown+move arrasta
+    // ── MOUSE ──
     pin.addEventListener("mousedown", e=>{
       if(e.button!==0) return;
       e.stopPropagation();
-      longPressTimer=setTimeout(()=>{startDrag(e.clientX,e.clientY);},200);
+      dragStartX=e.clientX; dragStartY=e.clientY;
+      copyHintShown=false;
+
+      // 350ms parado → modo cópia
+      longPressTimer=setTimeout(()=>{
+        if(!pinDragging){
+          pin.style.transform="translate(-50%,-100%) rotate(-45deg) scale(1.35)";
+          pin.style.boxShadow="0 0 0 4px rgba(255,255,255,.7), 0 4px 16px rgba(0,0,0,.5)";
+          copyHintShown=true;
+        }
+      }, 350);
+
       const onMove=ev=>{
-        if(!pinDragging && Math.hypot(ev.clientX-e.clientX,ev.clientY-e.clientY)>4){
+        const dist=Math.hypot(ev.clientX-dragStartX, ev.clientY-dragStartY);
+        if(!pinDragging && dist>5){
           clearTimeout(longPressTimer);
-          startDrag(e.clientX,e.clientY);
+          pin.style.transform=""; pin.style.boxShadow="";
+          copyHintShown=false;
+          startDrag(ev.clientX,ev.clientY);
         }
         if(pinDragging) moveDraggingPin(ev.clientX,ev.clientY,img);
       };
@@ -1108,8 +1127,14 @@ function renderPins() {
         clearTimeout(longPressTimer);
         document.removeEventListener("mousemove",onMove);
         document.removeEventListener("mouseup",onUp);
-        if(pinDragging){finishDrag();}
-        else if(!dragMoved){openItemModal(item.id);}
+        if(pinDragging){ finishDrag(); return; }
+        if(copyHintShown){
+          pin.style.transform=""; pin.style.boxShadow="";
+          copyHintShown=false;
+          copyPin(); return;
+        }
+        pin.style.transform=""; pin.style.boxShadow="";
+        if(!dragMoved) openItemModal(item.id);
       };
       document.addEventListener("mousemove",onMove);
       document.addEventListener("mouseup",onUp);
@@ -1262,7 +1287,7 @@ function printPlant() {
   <script>window.onload=function(){window.print();}<\/script>
   </body></html>`;
 
-  printViaIframe(html);
+  printViaIframe(html, 'Planta — ' + (state.units.find(x=>x.id===currentPlantUnit)?.num||''));
 }
 
 // ── MODAL DE ITEM ──
@@ -1555,107 +1580,152 @@ function buildAndPrint() {
     byEsp[item.esp][item.unitId].push(item);
   });
 
-  const th="background:#0E2A47;color:#fff;font-size:11px;font-weight:bold;padding:7px 9px;border:1px solid #0E2A47;text-align:left";
-  const td="font-size:11.5px;padding:7px 9px;border:1px solid #dde2e8;vertical-align:top";
-  const tdo="font-size:11.5px;padding:7px 9px;border:1px solid #dde2e8;vertical-align:top;background:#F0FDF4";
+  // ── Gerar páginas estilo Report & Run: foto grande, 2 por linha ──
+  let sections = "";
+  let globalNum = 0;
+  let isFirst = true;
 
-  let sections="";
-  let isFirst=true;
-  Object.entries(byEsp).forEach(([esp,byUnit])=>{
-    const espInfo=ESPS[esp]||ESPS.outros;
-    if(!isFirst) sections+=`<div style="page-break-before:always;height:1px"></div>`;
-    isFirst=false;
-    sections+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;padding:11px 13px;background:${espInfo.bg};border-radius:8px;border-left:4px solid ${espInfo.color}">
-      <span style="font-size:21px">${espInfo.ic}</span>
+  Object.entries(byEsp).forEach(([esp, byUnit]) => {
+    const espInfo = ESPS[esp] || ESPS.outros;
+    const allItems = Object.values(byUnit).flat();
+
+    if(!isFirst) sections += `<div style="page-break-before:always"></div>`;
+    isFirst = false;
+
+    // Cabeçalho da especialidade
+    sections += `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:${espInfo.bg};border-left:5px solid ${espInfo.color};border-radius:6px;margin-bottom:18px">
+      <span style="font-size:26px">${espInfo.ic}</span>
       <div>
-        <div style="font-size:15px;font-weight:800;color:${espInfo.color}">${espInfo.label}</div>
-        <div style="font-size:11px;color:#5C6B7A;font-weight:600">${Object.values(byUnit).flat().length} item(s)</div>
+        <div style="font-size:17px;font-weight:800;color:${espInfo.color}">${espInfo.label}</div>
+        <div style="font-size:11px;color:#5C6B7A;font-weight:600;margin-top:2px">${allItems.length} item(s) · ${esc(unidadeLabel)} · ${esc(espLabel)}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:10px;color:#5C6B7A">${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")}</div>
+        <div style="font-size:10px;color:#5C6B7A">${today()}</div>
       </div>
     </div>`;
-    Object.entries(byUnit).forEach(([uid,unitItems])=>{
-      const u=state.units.find(x=>x.id===uid);
-      const uLabel=u?`Unidade ${u.num}${u.floor?" · "+u.floor:""}${u.tipo?" — "+u.tipo:""}`:"Unidade";
-      sections+=`<p style="font-size:12.5px;font-weight:800;color:#0E2A47;margin:14px 0 7px">${esc(uLabel)}</p>
-      <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;margin-bottom:10px">
-        <tr>
-          <th style="${th};width:34px">Nº</th>
-          <th style="${th}">O que fazer</th>
-          <th style="${th};width:115px">Local / Ambiente</th>
-          <th style="${th};width:88px">Foto</th>
-          <th style="${th};width:76px">Status</th>
-        </tr>`;
-      unitItems.forEach((item,idx)=>{
-        const pend=item.status==="pendente";
-        const fotoCell=item.fotos?.length
-          ?item.fotos.slice(0,2).map(f=>`<img src="${f}" style="width:60px;height:44px;object-fit:cover;border-radius:4px;border:1px solid #dde2e8;margin:1px">`).join("")
-          :'<span style="color:#aaa;font-size:10px">—</span>';
-        sections+=`<tr>
-          <td style="${pend?td:tdo};text-align:center;font-weight:800">${idx+1}</td>
-          <td style="${pend?td:tdo}">
-            <div style="font-weight:600">${esc(item.desc||"—")}</div>
-            ${item.motivo?`<div style="font-size:10px;color:#5C6B7A;margin-top:2px">💡 ${esc(item.motivo)}</div>`:""}
-          </td>
-          <td style="${pend?td:tdo}">${esc(item.local||"—")}</td>
-          <td style="${pend?td:tdo}">${fotoCell}</td>
-          <td style="${pend?td:tdo};text-align:center">
-            <span style="padding:2px 7px;border-radius:20px;font-size:10px;font-weight:800;${pend?"background:#FEF3C7;color:#B45309":"background:#D1FAE5;color:#15803D"}">${pend?"Pendente":"Resolvido"}</span>
-          </td>
-        </tr>`;
-      });
-      sections+=`</table>`;
+
+    // Cards 2 por linha
+    Object.entries(byUnit).forEach(([uid, unitItems]) => {
+      const u = state.units.find(x => x.id === uid);
+      const uLabel = u ? `Unidade ${u.num}${u.floor?" · "+u.floor:""}${u.tipo?" — "+u.tipo:""}` : "Unidade";
+
+      if(Object.keys(byUnit).length > 1) {
+        sections += `<div style="font-size:12px;font-weight:800;color:#0E2A47;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;padding-bottom:5px;border-bottom:1px solid #dde2e8">${esc(uLabel)}</div>`;
+      }
+
+      // Agrupar em pares para grid 2 colunas
+      for(let i = 0; i < unitItems.length; i += 2) {
+        const pair = unitItems.slice(i, i+2);
+        sections += `<div style="display:table;width:100%;table-layout:fixed;margin-bottom:16px;border-collapse:separate;border-spacing:10px 0">`;
+        pair.forEach((item, pi) => {
+          globalNum++;
+          const pend = item.status === "pendente";
+          const fotos = item.fotos || [];
+          const mainFoto = fotos[0] || null;
+          const extraFotos = fotos.slice(1);
+
+          sections += `<div style="display:table-cell;width:50%;vertical-align:top;border:1px solid #dde2e8;border-radius:8px;overflow:hidden;page-break-inside:avoid">`;
+
+          // Foto principal grande
+          if(mainFoto) {
+            sections += `<div style="width:100%;aspect-ratio:4/3;overflow:hidden;background:#f0f0f0">
+              <img src="${mainFoto}" style="width:100%;height:100%;object-fit:cover;display:block">
+            </div>`;
+          } else {
+            sections += `<div style="width:100%;padding-top:75%;background:#f5f5f5;position:relative">
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:28px">📷</div>
+            </div>`;
+          }
+
+          // Fotos extras pequenas (se houver)
+          if(extraFotos.length) {
+            sections += `<div style="display:flex;gap:4px;padding:4px;background:#fafafa;border-top:1px solid #eee">
+              ${extraFotos.slice(0,3).map(f=>`<img src="${f}" style="flex:1;min-width:0;height:52px;object-fit:cover;border-radius:4px;border:1px solid #eee">`).join("")}
+            </div>`;
+          }
+
+          // Info do item
+          sections += `<div style="padding:10px 12px">
+            <div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:7px">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:${espInfo.color};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${globalNum}</span>
+              <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;flex-shrink:0;${pend?"background:#FEF3C7;color:#B45309":"background:#D1FAE5;color:#15803D"}">${pend?"⏳ Pendente":"✅ Resolvido"}</span>
+            </div>
+            ${item.local?`<div style="font-size:11px;color:#5C6B7A;font-weight:700;margin-bottom:5px">📍 ${esc(item.local)}</div>`:""}
+            ${item.desc?`<div style="font-size:12.5px;font-weight:600;line-height:1.45;color:#16202B;margin-bottom:5px">${esc(item.desc)}</div>`:""}
+            ${item.motivo?`<div style="font-size:11px;color:#5C6B7A;line-height:1.4">💡 ${esc(item.motivo)}</div>`:""}
+            <div style="margin-top:7px;padding-top:7px;border-top:1px solid #f0f0f0;font-size:10px;color:#aaa">${fmtDate(item.createdAt)}</div>
+          </div>`;
+
+          sections += `</div>`;
+        });
+        // Célula vazia se número ímpar
+        if(pair.length === 1) sections += `<div style="display:table-cell;width:50%"></div>`;
+        sections += `</div>`;
+      }
     });
   });
 
-  const logoHtml=c.logoMelnick
-    ?`<img src="${c.logoMelnick}" style="height:42px;object-fit:contain">`
-    :`<div style="width:42px;height:42px;background:#0E2A47;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#B5862E;font-weight:800;font-size:22px">M</div>`;
+  const logoHtml = c.logoMelnick
+    ? `<img src="${c.logoMelnick}" style="height:40px;object-fit:contain">`
+    : `<div style="width:40px;height:40px;background:#0E2A47;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#B5862E;font-weight:800;font-size:22px">M</div>`;
 
-  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
   <title>Relatório · ${esc(c.obraName||"")}</title>
   <style>
+    *{box-sizing:border-box}
     body{font-family:Arial,Helvetica,sans-serif;color:#16202B;margin:0;padding:0}
-    @page{margin:13mm}
-    @media print{body{margin:0}}
+    @page{margin:12mm}
+    @media print{body{margin:0} .no-break{page-break-inside:avoid}}
   </style></head><body>
-  <div style="border-bottom:3px solid #0E2A47;padding-bottom:10px;margin-bottom:14px;display:flex;align-items:flex-start;gap:13px">
+  <div style="border-bottom:3px solid #0E2A47;padding-bottom:10px;margin-bottom:18px;display:flex;align-items:center;gap:13px">
     ${logoHtml}
     <div>
-      <div style="font-size:19px;font-weight:800;color:#0E2A47;letter-spacing:.3px">RELATÓRIO DE VISTORIA · ACABAMENTO</div>
-      <div style="font-size:11.5px;color:#6B7A8A;font-weight:600;margin-top:2px">${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · ${today()}</div>
+      <div style="font-size:18px;font-weight:800;color:#0E2A47;letter-spacing:.3px">RELATÓRIO DE VISTORIA · ACABAMENTO</div>
+      <div style="font-size:11px;color:#6B7A8A;font-weight:600;margin-top:2px">${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · ${today()} · ${items.length} item(s)</div>
     </div>
   </div>
-  <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;margin-bottom:16px">
-    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5;width:130px">Responsável</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${esc(espLabel)}</td></tr>
-    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5">Unidade</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${esc(unidadeLabel)}</td></tr>
-    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5">Total de itens</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${items.length} item(s)</td></tr>
-    <tr><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:10.5px;font-weight:800;color:#0E2A47;background:#F0F2F5">Data de emissão</td><td style="padding:5px 8px;border:1px solid #dde2e8;font-size:12px">${today()}</td></tr>
-  </table>
   ${sections}
-  <div style="margin-top:36px;border-top:1px solid #dde2e8;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#6B7A8A">
+  <div style="margin-top:28px;border-top:1px solid #dde2e8;padding-top:8px;display:flex;justify-content:space-between;font-size:9.5px;color:#6B7A8A">
     <span>${esc(c.empresa||"Melnick")} · ${esc(c.obraName||"")} · Vistoria de Apartamentos</span><span>${today()}</span>
   </div>
   <script>window.onload=function(){window.print();}<\/script>
   </body></html>`;
 
-  printViaIframe(html);
+  printViaIframe(html, 'Relatório de Vistoria');
 }
 
 
-// ── IMPRESSÃO: abre nova aba e escreve o HTML diretamente ──
-function printViaIframe(html) {
-  const w = window.open("about:blank", "_blank");
-  if(!w) {
-    toast("⚠ Permita popups neste site para imprimir. (Ícone na barra de endereço)");
-    return;
-  }
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  // Aguarda o conteúdo carregar antes de abrir print
-  w.onload = function(){ w.focus(); w.print(); };
-  // Fallback caso onload não dispare
-  setTimeout(function(){ try { w.focus(); w.print(); } catch(e){} }, 900);
+// ── IMPRESSÃO DIRETA — injeta no printArea e chama window.print() ──
+function printViaIframe(html, title) {
+  // Extrai o conteúdo do body
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const bodyContent = bodyMatch ? bodyMatch[1] : html;
+  const clean = bodyContent.replace(/<script[\s\S]*?<\/script>/gi, "");
+
+  const area = document.getElementById("printArea");
+  // Injeta estilos de impressão + conteúdo
+  area.innerHTML = `<style>
+    *{box-sizing:border-box}
+    body{font-family:Arial,Helvetica,sans-serif;color:#16202B;margin:0;padding:0}
+    img{max-width:100%}
+    @page{margin:12mm}
+  </style>` + clean;
+  area.style.display = "block";
+
+  // Pequeno delay para o browser renderizar as imagens
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      area.style.display = "none";
+      area.innerHTML = "";
+    }, 1500);
+  }, 500);
 }
+
+function closePrintOverlay() {}
+function doPrint() {}
 
 // ── EXPORT / IMPORT / SAVE ──
 function exportData() {
@@ -1713,18 +1783,10 @@ function renderAll() {
   if(currentPlantUnit) { syncPlantSelect(); loadPlantForUnit(currentPlantUnit); }
 }
 
-// Init: carrega local primeiro (instantâneo), depois tenta nuvem
+// Init
 applyConfig();
 renderUnits();
 if(currentPlantUnit) { syncPlantSelect(); loadPlantForUnit(currentPlantUnit); }
-
-// Carregar da nuvem em background
-cloudLoad().then(loaded => {
-  if(loaded) {
-    currentPlantUnit = state._lastUnit || null;
-    renderAll();
-  }
-});
 </script>
 </body>
 </html>
