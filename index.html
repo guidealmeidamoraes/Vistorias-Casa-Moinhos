@@ -315,9 +315,18 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 ::-webkit-scrollbar-thumb { background: rgba(14,42,71,.18); border-radius: 3px; }
 
 @media print {
+  html, body { height: auto !important; overflow: visible !important; }
   body > *:not(#printArea) { display: none !important; }
-  #printArea { display: block !important; position: fixed !important; inset: 0; background: #fff; }
-  #printArea > div:first-child { display: none !important; } /* esconde barra de botões */
+  #printArea {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff;
+    z-index: auto !important;
+  }
+  #_pbar { display: none !important; }
   @page { margin: 12mm; }
 }
 #printArea {
@@ -1742,7 +1751,7 @@ function printViaIframe(html, title) {
         ✕ Fechar
       </button>
     </div>
-    <div style="padding:68px 24px 40px">${clean}</div>`;
+    <div style="padding:68px 24px 40px;min-height:0;overflow:visible">${clean}</div>`;
 
   area.style.display = "block";
 
